@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Órbita de Planetas</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    body {
+      margin: 0;
+      background-color: #071012;
+      overflow: hidden; /* Evita que aparezcan barras de scroll por el giro */
+    }
+
+    /* --- Esferas (Texturas y Volumen) --- */
+    .sphere {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 
+        inset -10px -10px 15px rgba(0, 0, 0, 0.8),
+        inset 6px 6px 10px rgba(255, 255, 255, 0.3),
+        inset 0px 0px 5px rgba(255, 255, 255, 0.2),
+        0 10px 20px rgba(0,0,0,0.6);
+      /* Para que el interior no parezca plano al girar el contenedor general,
+         agregamos un giro inverso para estabilizar el gradiente, si se desea.
+         (En este caso, lo dejamos girar junto con el sistema). */
+    }
+
+    /* Texturas de cada planeta */
+    .sphere-1 { background: linear-gradient(135deg, rgba(230,126,34,1) 0%, rgba(211,84,0,1) 50%, rgba(142,68,173,0.8) 100%), repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px); background-blend-mode: overlay; }
+    .sphere-2 { background: linear-gradient(110deg, transparent 40%, rgba(231,76,60,0.8) 42%, rgba(231,76,60,0.8) 58%, transparent 60%), linear-gradient(-70deg, transparent 30%, rgba(26,188,156,0.6) 32%, rgba(26,188,156,0.6) 48%, transparent 50%), radial-gradient(circle at 30% 30%, #2c3e50, #1a252f); }
+    .sphere-3 { background: linear-gradient(125deg, transparent 35%, rgba(211,84,0,0.9) 37%, rgba(211,84,0,0.9) 63%, transparent 65%), radial-gradient(circle at 40% 40%, #16a085, #0b4e41); }
+    .sphere-4 { background: linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%), linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%), radial-gradient(circle at 35% 35%, #7f8c8d, #2c3e50, #000); }
+    .sphere-5 { background: radial-gradient(circle at 20% 30%, rgba(26,188,156,0.5) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(241,196,15,0.2) 0%, transparent 40%), linear-gradient(135deg, #34495e, #111); }
+    .sphere-6 { background: radial-gradient(ellipse at 40% 30%, #e74c3c 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, #c0392b 0%, transparent 60%), linear-gradient(45deg, #8e44ad, #c0392b); }
+    .sphere-7 { background: linear-gradient(95deg, transparent 45%, rgba(41,128,185,0.7) 48%, rgba(41,128,185,0.7) 52%, transparent 55%), radial-gradient(circle at 30% 30%, #8e8055, #4a4128); }
+    .sphere-8 { background: linear-gradient(160deg, #fdfbfb 0%, #ebedee 40%, rgba(231,76,60,0.8) 100%); }
+
+    /* --- Estructura del Sistema Solar --- */
+    
+    /* Contenedor con efecto Parallax sutil */
+    #scene-wrapper {
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    /* El contenedor que realizará el giro (La velocidad se asigna en JS) */
+    #solar-system {
+      position: absolute;
+      width: 0;
+      height: 0;
+      /* Animación base, la duración se ajusta dinámicamente */
+      animation: spinContinuous var(--orbit-speed, 30s) linear infinite;
+    }
+
+    @keyframes spinContinuous {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Posicionamiento base y animaciones de movimiento */
+    .planet-wrapper {
+      position: absolute;
+      top: -30px; /* Centrado (-mitad del tamaño de la esfera) */
+      left: -30px;
+      /* Transición suave para ir al centro y regresar */
+      transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+      cursor: crosshair; /* Cursor para apuntar y seleccionar */
+      z-index: 10;
+    }
+
+    /* Efecto cuando el usuario selecciona un planeta para colisionar */
+    .planet-wrapper.selected .sphere {
+      box-shadow: 
+        0 0 30px rgba(255, 60, 60, 0.9),
+        inset -10px -10px 15px rgba(0, 0, 0, 0.8),
+        inset 6px 6px 10px rgba(255, 255, 255, 0.3);
+      border: 2px solid rgba(255, 100, 100, 0.8);
+      transform: scale(1.1);
+    }
+    
+    .planet-wrapper .sphere {
+      transition: all 0.3s ease;
+    }
+
+    /* --- Efectos de Desastre Planetario --- */
+    
+    /* Sacudida de pantalla */
+    .shake-screen {
+      animation: shake 0.6s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-5px, 0, 0); }
+      20%, 80% { transform: translate3d(5px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-15px, -15px, 0) rotate(-2deg); }
+      40%, 60% { transform: translate3d(15px, 15px, 0) rotate(2deg); }
+    }
+
+    /* Partículas de la explosión */
+    .explosion-particle {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px currentColor;
+      animation: explode 1.2s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    @keyframes explode {
+      0% { transform: translate(0, 0) scale(1.5); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+
+    /* Pequeño indicador de velocidad (opcional para ver qué tocó) */
+    #speed-indicator {
+      transition: opacity 1s ease;
+    }
+
+    @media (max-width: 768px) {
+      .sphere { width: 45px; height: 45px; }
+      .planet-wrapper { top: -22.5px; left: -22.5px; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-[#0b1618] via-[#071316] to-[#050a0b] text-white">
+  
+  <div class="relative min-h-screen flex items-center justify-center">
+    
+    <!-- Textura de grano (Ruido de fondo) -->
+    <div 
+      class="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
+      style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"
+    ></div>
+
+    <!-- Resplandor central suave -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <!-- Sistema Orbital interactivo -->
+    <div id="scene-wrapper" class="absolute inset-0 flex items-center justify-center z-10">
+      <div id="solar-system">
+        <!-- Generación de los 8 planetas -->
+        <div class="planet-wrapper"><div class="sphere sphere-1"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-2"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-3"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-4"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-5"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-6"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-7"></div></div>
+        <div class="planet-wrapper"><div class="sphere sphere-8"></div></div>
+      </div>
+    </div>
+
+    <!-- Etiqueta que muestra la velocidad actual (se desvanece) -->
+    <div id="speed-indicator" class="absolute bottom-10 font-sans text-white/30 text-xs tracking-[0.3em] uppercase pointer-events-none z-20">
+      Velocidad: Calculando...
+    </div>
+
+    <!-- Texto de Alerta de Desastre (Oculto) -->
+    <div id="disaster-text" class="absolute top-1/4 w-full text-center font-sans text-4xl md:text-6xl text-red-500 font-bold tracking-widest uppercase opacity-0 pointer-events-none z-50 drop-shadow-[0_0_30px_rgba(255,0,0,0.8)] transition-opacity duration-300">
+      ¡Colisión Crítica!
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const scene = document.getElementById('scene-wrapper');
+      const solarSystem = document.getElementById('solar-system');
+      const wrappers = document.querySelectorAll('.planet-wrapper');
+      const speedIndicator = document.getElementById('speed-indicator');
+      const disasterText = document.getElementById('disaster-text');
+
+      // 1. Posicionar los planetas en un círculo
+      const radius = window.innerWidth < 768 ? 130 : 250; 
+      
+      wrappers.forEach((wrapper, index) => {
+        const angle = (index / wrappers.length) * (2 * Math.PI);
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        
+        // Guardamos su posición original en variables CSS
+        wrapper.style.setProperty('--orig-x', `${x}px`);
+        wrapper.style.setProperty('--orig-y', `${y}px`);
+        wrapper.style.transform = `translate(var(--orig-x), var(--orig-y))`;
+      });
+
+      // 2. Selección Aleatoria de Velocidad
+      // Definimos perfiles de velocidad. (Tiempo en segundos que tarda en dar 1 vuelta)
+      const speedProfiles = [
+        { name: "Muy Suave", duration: "80s" },
+        { name: "Suave", duration: "45s" },
+        { name: "Normal", duration: "25s" },
+        { name: "Rápido", duration: "10s" },
+        { name: "Muy Rápido", duration: "4s" },
+        { name: "Frenético", duration: "1.5s" } // ¡Un extra para la suerte!
+      ];
+
+      // Elegir uno al azar
+      const randomProfile = speedProfiles[Math.floor(Math.random() * speedProfiles.length)];
+
+      // Aplicar la duración a la variable CSS del contenedor
+      solarSystem.style.setProperty('--orbit-speed', randomProfile.duration);
+
+      // Mostrar al usuario qué velocidad tocó
+      speedIndicator.textContent = `Velocidad actual: ${randomProfile.name}`;
+
+      // Ocultar el indicador después de 4 segundos para dejar la vista limpia
+      setTimeout(() => {
+        speedIndicator.style.opacity = '0';
+      }, 4000);
+
+      // 3. Efecto Parallax Ligero (para darle profundidad si se mueve el mouse)
+      document.addEventListener('mousemove', (e) => {
+        const xAxis = (window.innerWidth / 2 - e.pageX) / 40; 
+        const yAxis = (window.innerHeight / 2 - e.pageY) / 40;
+        scene.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+      });
+
+      // --- NUEVAS FUNCIONES DE INTERACCIÓN ---
+
+      let selectedPlanets = [];
+      let isDisasterHappening = false;
+
+      // 4. Lógica de Colisión (Interactivo)
+      wrappers.forEach(wrapper => {
+        wrapper.addEventListener('click', () => {
+          // Si hay una explosión o el planeta ya fue seleccionado/destruido, ignorar clic
+          if (isDisasterHappening || wrapper.classList.contains('selected') || wrapper.classList.contains('destroyed')) return;
+
+          // Seleccionar planeta
+          wrapper.classList.add('selected');
+          selectedPlanets.push(wrapper);
+
+          // Si seleccionó 2, crear el desastre
+          if (selectedPlanets.length === 2) {
+            triggerDisaster();
+          }
+        });
+      });
+
+      function triggerDisaster() {
+        isDisasterHappening = true;
+        const [p1, p2] = selectedPlanets;
+
+        // Ambos planetas viajan al centro (colisión inminente)
+        p1.style.transform = `translate(0px, 0px) scale(1.2)`;
+        p2.style.transform = `translate(0px, 0px) scale(1.2)`;
+        p1.style.zIndex = '50';
+        p2.style.zIndex = '50';
+
+        // Esperar 1.5s a que lleguen al centro y ¡BOOM!
+        setTimeout(() => {
+          // Ocultar planetas (destruidos)
+          p1.style.opacity = '0';
+          p2.style.opacity = '0';
+          p1.classList.add('destroyed');
+          p2.classList.add('destroyed');
+
+          // Efectos de explosión
+          document.body.classList.add('shake-screen');
+          disasterText.style.opacity = '1';
+          createParticles();
+          createFlash();
+
+          // Limpiar efectos rápidos
+          setTimeout(() => document.body.classList.remove('shake-screen'), 600);
+          setTimeout(() => disasterText.style.opacity = '0', 2000);
+
+          // Restaurar el sistema después de unos segundos
+          setTimeout(() => {
+            p1.style.transform = `translate(var(--orig-x), var(--orig-y))`;
+            p2.style.transform = `translate(var(--orig-x), var(--orig-y))`;
+            p1.classList.remove('selected', 'destroyed');
+            p2.classList.remove('selected', 'destroyed');
+            p1.style.zIndex = '10';
+            p2.style.zIndex = '10';
+            
+            // Aparecen lentamente como nuevos
+            p1.style.opacity = '1';
+            p2.style.opacity = '1';
+            
+            selectedPlanets = [];
+            isDisasterHappening = false;
+          }, 4500);
+
+        }, 1500);
+      }
+
+      function createFlash() {
+        const flash = document.createElement('div');
+        flash.className = 'absolute inset-0 bg-white z-[60] pointer-events-none opacity-0';
+        flash.style.transition = 'opacity 0.1s ease-out';
+        document.body.appendChild(flash);
+        setTimeout(() => flash.style.opacity = '0.9', 10);
+        setTimeout(() => {
+          flash.style.opacity = '0';
+          setTimeout(() => flash.remove(), 500);
+        }, 100);
+      }
+
+      function createParticles() {
+        const colors = ['#e74c3c', '#f1c40f', '#e67e22', '#ffffff', '#8e44ad'];
+        for (let i = 0; i < 40; i++) {
+          const particle = document.createElement('div');
+          particle.className = 'explosion-particle';
+          
+          // Calcular dirección de salida aleatoria
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 150 + Math.random() * 250; // Qué tan lejos vuelan
+          const tx = Math.cos(angle) * distance;
+          const ty = Math.sin(angle) * distance;
+          
+          particle.style.setProperty('--tx', `${tx}px`);
+          particle.style.setProperty('--ty', `${ty}px`);
+          particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+          
+          solarSystem.appendChild(particle);
+          setTimeout(() => particle.remove(), 1200);
+        }
+      }
+
+      // 5. EVENTOS AUTOMÁTICOS (El sistema decide qué hacer)
+      
+      function triggerPeacefulVisit() {
+        const available = Array.from(wrappers).filter(w => !w.classList.contains('selected') && !w.classList.contains('destroyed'));
+        if (available.length === 0) return;
+
+        // Elegir un planeta al azar
+        const visitor = available[Math.floor(Math.random() * available.length)];
+        
+        // Moverlo al centro y hacerlo grande
+        visitor.style.transform = `translate(0px, 0px) scale(1.6)`;
+        visitor.style.zIndex = '40';
+
+        // Regresarlo a su lugar después de 3.5 segundos
+        setTimeout(() => {
+          // Si por accidente se seleccionó para desastre mientras estaba en el centro, no lo regresamos
+          if (visitor.classList.contains('selected') || isDisasterHappening) return;
+          
+          visitor.style.transform = `translate(var(--orig-x), var(--orig-y))`;
+          visitor.style.zIndex = '10';
+        }, 3500);
+      }
+
+      function triggerAutomaticDisaster() {
+        const available = Array.from(wrappers).filter(w => !w.classList.contains('selected') && !w.classList.contains('destroyed'));
+        if (available.length < 2) return;
+
+        // Elegir dos planetas distintos al azar
+        const p1Index = Math.floor(Math.random() * available.length);
+        const p1 = available[p1Index];
+        available.splice(p1Index, 1); // Quitarlo de la lista para no repetirlo
+        const p2Index = Math.floor(Math.random() * available.length);
+        const p2 = available[p2Index];
+
+        // Seleccionarlos automáticamente
+        p1.classList.add('selected');
+        p2.classList.add('selected');
+        selectedPlanets = [p1, p2];
+
+        // Disparar el desastre
+        triggerDisaster();
+      }
+
+      function executeRandomEvent() {
+        // No iniciar eventos nuevos si ya hay un caos
+        if (!isDisasterHappening) {
+          // 30% de probabilidad de DESASTRE, 70% de probabilidad de VISITA PACÍFICA
+          if (Math.random() < 0.30) {
+            triggerAutomaticDisaster();
+          } else {
+            triggerPeacefulVisit();
+          }
+        }
+
+        // Programar el siguiente evento en un tiempo aleatorio (entre 8 y 15 segundos)
+        setTimeout(executeRandomEvent, 8000 + Math.random() * 7000);
+      }
+
+      // Iniciar el ciclo de eventos automáticos después de 4 segundos
+      setTimeout(executeRandomEvent, 4000);
+
+    });
+  </script>
+</body>
+</html>
