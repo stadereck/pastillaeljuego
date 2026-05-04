@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diseño Pastilla</title>
+  
+  <!-- Tailwind CSS por CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+    body {
+      margin: 0;
+      background-color: #071012;
+      font-family: 'Cormorant Garamond', serif;
+      /* Elimina el resalte azul nativo de los navegadores móviles al tocar */
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .text-glow {
+      text-shadow: 0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(255,255,255,0.05);
+    }
+
+    /* --- Lógica del Dock de macOS --- */
+    .dock-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      height: 180px; /* Espacio para que crezcan sin desplazar el resto del layout */
+    }
+
+    .sphere {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 
+        inset -12px -12px 20px rgba(0, 0, 0, 0.8),
+        inset 8px 8px 15px rgba(255, 255, 255, 0.3),
+        inset 0px 0px 5px rgba(255, 255, 255, 0.2),
+        0 10px 15px rgba(0,0,0,0.6);
+      /* Transición suave para todos los cambios de tamaño, simulando la fluidez del Mac */
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      cursor: pointer;
+      outline: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-decoration: none;
+    }
+
+    /* 1. Esfera Principal (La que tiene el cursor / dedo encima) */
+    .sphere:hover,
+    .sphere:focus,
+    .sphere:active {
+      width: 150px;
+      height: 150px;
+      box-shadow: 
+        inset -12px -12px 20px rgba(0, 0, 0, 0.8),
+        inset 8px 8px 15px rgba(255, 255, 255, 0.4),
+        inset 0px 0px 5px rgba(255, 255, 255, 0.3),
+        0 25px 35px rgba(0,0,0,0.8);
+      z-index: 10;
+    }
+
+    /* 2. Esfera DERECHA Inmediata (Hermano siguiente) */
+    .sphere:hover + .sphere,
+    .sphere:focus + .sphere {
+      width: 95px;
+      height: 95px;
+      z-index: 5;
+    }
+
+    /* 3. Esfera IZQUIERDA Inmediata (Hermano anterior - Magia de CSS moderno con :has) */
+    .dock-container:has(> .sphere:hover) .sphere:has(+ .sphere:hover),
+    .dock-container:has(> .sphere:focus) .sphere:has(+ .sphere:focus),
+    .dock-container:has(> .sphere:active) .sphere:has(+ .sphere:active) {
+      width: 95px;
+      height: 95px;
+      z-index: 5;
+    }
+
+    /* Contenido interno de la esfera (Número y Nombre) */
+    .sphere-content {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .sphere:hover .sphere-content,
+    .sphere:focus .sphere-content,
+    .sphere:active .sphere-content {
+      opacity: 1;
+      transition-delay: 0.1s; /* Retraso para que el texto aparezca solo cuando ya es grande */
+    }
+
+    .sphere-number {
+      font-size: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 4px auto;
+      font-family: sans-serif;
+    }
+
+    .sphere-name {
+      font-size: 1.1rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    /* Mini esfera para el contenedor del input */
+    .mini-sphere {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      box-shadow: inset -4px -4px 6px rgba(0,0,0,0.8), inset 2px 2px 4px rgba(255,255,255,0.3);
+    }
+
+    /* Ocultar barra de scroll en móviles */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    /* --- Texturas y Gradientes de cada Esfera --- */
+    .sphere-1 {
+      background: linear-gradient(135deg, rgba(230,126,34,1) 0%, rgba(211,84,0,1) 50%, rgba(142,68,173,0.8) 100%),
+                  repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+      background-blend-mode: overlay;
+    }
+
+    .sphere-2 {
+      background: 
+        linear-gradient(110deg, transparent 40%, rgba(231,76,60,0.8) 42%, rgba(231,76,60,0.8) 58%, transparent 60%),
+        linear-gradient(-70deg, transparent 30%, rgba(26,188,156,0.6) 32%, rgba(26,188,156,0.6) 48%, transparent 50%),
+        radial-gradient(circle at 30% 30%, #2c3e50, #1a252f);
+    }
+
+    .sphere-3 {
+      background: 
+        linear-gradient(125deg, transparent 35%, rgba(211,84,0,0.9) 37%, rgba(211,84,0,0.9) 63%, transparent 65%),
+        radial-gradient(circle at 40% 40%, #16a085, #0b4e41);
+    }
+
+    .sphere-4 {
+      background: 
+        linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%),
+        linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%),
+        radial-gradient(circle at 35% 35%, #7f8c8d, #2c3e50, #000);
+    }
+
+    .sphere-5 {
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(26,188,156,0.5) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(241,196,15,0.2) 0%, transparent 40%),
+        linear-gradient(135deg, #34495e, #111);
+    }
+
+    .sphere-6 {
+      background: 
+        radial-gradient(ellipse at 40% 30%, #e74c3c 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, #c0392b 0%, transparent 60%),
+        linear-gradient(45deg, #8e44ad, #c0392b);
+    }
+
+    .sphere-7 {
+      background: 
+        linear-gradient(95deg, transparent 45%, rgba(41,128,185,0.7) 48%, rgba(41,128,185,0.7) 52%, transparent 55%),
+        radial-gradient(circle at 30% 30%, #8e8055, #4a4128);
+    }
+
+    .sphere-8 {
+      background: 
+        linear-gradient(160deg, #fdfbfb 0%, #ebedee 40%, rgba(231,76,60,0.8) 100%);
+    }
+
+    @media (max-width: 768px) {
+      .sphere {
+        width: 50px;
+        height: 50px;
+      }
+    }
+
+    /* --- ESTILOS PARA EL MODO CLARO --- */
+    body.light-theme {
+      background-color: #e2e8f0;
+      color: #0f172a;
+    }
+    body.light-theme .bg-gradient-to-br {
+      background-image: linear-gradient(to bottom right, #f8fafc, #e2e8f0, #cbd5e1);
+    }
+    body.light-theme .text-white { color: #0f172a; }
+    body.light-theme .text-white\/60, body.light-theme .text-white\/50 { color: rgba(15, 23, 42, 0.6); }
+    body.light-theme .text-white\/90 { color: rgba(15, 23, 42, 0.9); }
+    body.light-theme .text-glow {
+      text-shadow: 0 0 20px rgba(0,0,0,0.1), 0 0 40px rgba(0,0,0,0.05);
+    }
+    /* Adaptando el glassmorphism al modo claro */
+    body.light-theme .bg-\[\#1a2327\]\/60 { background-color: rgba(255, 255, 255, 0.6); }
+    body.light-theme .border-white\/20, body.light-theme .border-white\/5 { border-color: rgba(0, 0, 0, 0.1); }
+    body.light-theme .bg-black\/40 { background-color: rgba(255, 255, 255, 0.5); }
+    body.light-theme .bg-black\/30 { background-color: rgba(255, 255, 255, 0.6); }
+    body.light-theme .hover\:bg-black\/50:hover { background-color: rgba(255, 255, 255, 0.9); }
+    body.light-theme .placeholder-white\/30::placeholder { color: rgba(15, 23, 42, 0.4); }
+    
+    /* Botones de tema (Estado Activo) */
+    .theme-btn { transition: all 0.3s ease; }
+    .theme-btn.active {
+      background-color: #2a3c42;
+      color: #3cdcc1;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+    body.light-theme .theme-btn.active {
+      background-color: #ffffff;
+      color: #0ea5e9;
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#0b1618] via-[#071316] to-[#050a0b] text-white">
+    
+    <!-- Textura de grano suave (Ruido de fondo) -->
+    <div 
+      class="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
+      style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"
+    ></div>
+
+    <!-- Líneas decorativas de fondo (SVGs) -->
+    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path d="M-10,20 Q40,10 60,-10" stroke="url(#gradR)" stroke-width="0.1" fill="none" />
+      <path d="M-10,80 Q30,100 70,60 T120,40" stroke="url(#gradR)" stroke-width="0.1" fill="none" />
+      <path d="M110,10 Q60,30 30,110" stroke="url(#gradG)" stroke-width="0.1" fill="none" />
+      <path d="M40,110 Q80,80 120,90" stroke="url(#gradG)" stroke-width="0.1" fill="none" />
+      <defs>
+        <linearGradient id="gradR" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ff4d4d" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
+        <linearGradient id="gradG" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#4dff88" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <!-- Resplandor central suave -->
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+    <!-- Barra Superior -->
+    <div class="absolute top-0 w-full p-6 flex justify-between items-center z-20">
+      <div class="flex items-center gap-2 text-white/90">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="opacity-80">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/>
+          <circle cx="12" cy="12" r="2" fill="currentColor"/>
+        </svg>
+        <span class="font-sans font-semibold tracking-wide text-lg">pastilla</span>
+      </div>
+      <button class="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="relative z-10 flex flex-col items-center w-full max-w-5xl px-4 mt-12">
+      
+      <!-- Textos -->
+      <h1 class="text-[4rem] md:text-[5rem] leading-[1] font-normal text-center text-glow mb-2">
+        Hágalo <span class="italic font-light">suyo</span>
+      </h1>
+      <p class="text-white/60 font-sans text-sm md:text-base tracking-wide mb-12">
+        Elija un nombre de usuario y un avatar
+      </p>
+
+      <!-- Input Redondeado (Estilo Pastilla) -->
+      <div class="relative flex items-center bg-[#1a2327]/60 border border-white/20 rounded-full px-2 py-2 mb-16 w-full max-w-[340px] shadow-[0_0_15px_rgba(255,255,255,0.05),inset_0_4px_10px_rgba(0,0,0,0.5)] focus-within:border-white/40 focus-within:shadow-[0_0_20px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)] transition-all">
+        <div class="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center mr-3 ml-1 border border-white/5">
+          <div id="currentAvatar" class="mini-sphere sphere-6"></div>
+        </div>
+        <input id="usernameInput" type="text" class="bg-transparent border-none outline-none text-white font-sans text-lg w-full placeholder-white/30" placeholder="Nombre de usuario" spellcheck="false" />
+        <!-- Cursor de texto falso simulando el typing de la imagen -->
+        <span id="fakeCursor" class="absolute right-[115px] text-white/80 animate-pulse font-sans font-light text-xl pointer-events-none">|</span>
+      </div>
+
+      <!-- Carrusel de Planetas (Efecto Dock de macOS) -->
+      <div class="dock-container w-full px-4 overflow-x-auto pb-4 md:pb-0 md:overflow-visible scrollbar-hide">
+        <div class="sphere sphere-1" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">01</div><div class="sphere-name">Mercurio</div></div>
+        </div>
+        <div class="sphere sphere-2" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">02</div><div class="sphere-name">Venus</div></div>
+        </div>
+        <div class="sphere sphere-3" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">03</div><div class="sphere-name">Tierra</div></div>
+        </div>
+        <div class="sphere sphere-4" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">04</div><div class="sphere-name">Luna</div></div>
+        </div>
+        <div class="sphere sphere-5" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">05</div><div class="sphere-name">Júpiter</div></div>
+        </div>
+        <div class="sphere sphere-6" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">06</div><div class="sphere-name">Marte</div></div>
+        </div>
+        <div class="sphere sphere-7" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">07</div><div class="sphere-name">Saturno</div></div>
+        </div>
+        <div class="sphere sphere-8" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">08</div><div class="sphere-name">Urano</div></div>
+        </div>
+        <div class="sphere sphere-2" tabindex="0">
+          <div class="sphere-content"><div class="sphere-number">09</div><div class="sphere-name">Neptuno</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra Inferior de Controles -->
+    <div class="absolute bottom-6 w-full px-8 flex justify-between items-center z-20 font-sans text-sm">
+      
+      <!-- Botón Volver -->
+      <button class="bg-black/30 hover:bg-black/50 text-white/90 border border-white/5 px-6 py-2.5 rounded-xl transition-colors backdrop-blur-md">
+        Volver
+      </button>
+
+      <!-- Selector de Tema (Centro) -->
+      <div class="hidden md:flex items-center gap-3">
+        <div class="flex items-center bg-black/30 border border-white/5 rounded-xl p-1 backdrop-blur-md">
+          <button id="btnLight" class="theme-btn flex items-center gap-2 text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-transparent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+            Claro
+          </button>
+          <button id="btnDark" class="theme-btn flex items-center gap-2 text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-transparent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            Oscuro
+          </button>
+          <button id="btnDevice" class="theme-btn active flex items-center gap-2 text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-transparent">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            Dispositivo
+          </button>
+        </div>
+        <button class="bg-black/30 hover:bg-black/50 text-white/60 hover:text-white border border-white/5 p-2.5 rounded-xl transition-colors backdrop-blur-md">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </button>
+      </div>
+
+      <!-- Botón Continuar -->
+      <button class="bg-[#3cdcc1] hover:bg-[#34c7ae] text-[#071316] font-medium px-8 py-2.5 rounded-xl transition-colors shadow-[0_0_20px_rgba(60,220,193,0.3)]">
+        Continuar
+      </button>
+      
+    </div>
+  </div>
+
+  <!-- Script de Lógica e Interactividad -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('usernameInput');
+      const fakeCursor = document.getElementById('fakeCursor');
+      const currentAvatar = document.getElementById('currentAvatar');
+      const dockSpheres = document.querySelectorAll('.dock-container .sphere');
+      
+      const btnLight = document.getElementById('btnLight');
+      const btnDark = document.getElementById('btnDark');
+      const btnDevice = document.getElementById('btnDevice');
+      const themeButtons = { 'light': btnLight, 'dark': btnDark, 'device': btnDevice };
+
+      // 1. Cargar datos guardados (o valores por defecto)
+      let savedName = localStorage.getItem('pastilla_name') || '';
+      let savedAvatar = localStorage.getItem('pastilla_avatar') || 'sphere-6';
+      let savedTheme = localStorage.getItem('pastilla_theme') || 'device';
+
+      // -- LÓGICA DEL NOMBRE --
+      input.value = savedName;
+      
+      const updateCursor = () => {
+        // Oculta el cursor falso si hay texto escrito
+        fakeCursor.style.display = input.value.length > 0 ? 'none' : 'block';
+      };
+      
+      input.addEventListener('input', (e) => {
+        localStorage.setItem('pastilla_name', e.target.value);
+        updateCursor();
+      });
+      updateCursor(); // Inicializar estado del cursor
+
+      // -- LÓGICA DEL AVATAR --
+      const setAvatar = (className) => {
+        currentAvatar.className = `mini-sphere ${className}`;
+        localStorage.setItem('pastilla_avatar', className);
+      };
+      setAvatar(savedAvatar);
+
+      dockSpheres.forEach(sphere => {
+        sphere.addEventListener('click', () => {
+          // Extrae la clase específica 'sphere-X' del planeta clickeado
+          const sphereClass = Array.from(sphere.classList).find(c => c.startsWith('sphere-') && !c.includes('content'));
+          if (sphereClass) setAvatar(sphereClass);
+        });
+      });
+
+      // -- LÓGICA DEL TEMA --
+      const applyTheme = (themeStr) => {
+        localStorage.setItem('pastilla_theme', themeStr);
+        
+        // Quitar estado activo de todos los botones
+        Object.values(themeButtons).forEach(btn => btn.classList.remove('active'));
+        
+        // Poner estado activo al botón seleccionado
+        if(themeButtons[themeStr]) {
+          themeButtons[themeStr].classList.add('active');
+        }
+
+        // Aplicar el tema al body
+        if (themeStr === 'light') {
+          document.body.classList.add('light-theme');
+        } else if (themeStr === 'dark') {
+          document.body.classList.remove('light-theme');
+        } else if (themeStr === 'device') {
+          // Detectar preferencia del sistema
+          const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+          if (prefersLight) {
+            document.body.classList.add('light-theme');
+          } else {
+            document.body.classList.remove('light-theme');
+          }
+        }
+      };
+
+      // Inicializar tema guardado
+      applyTheme(savedTheme);
+
+      // Event Listeners para los botones de tema
+      btnLight.addEventListener('click', () => applyTheme('light'));
+      btnDark.addEventListener('click', () => applyTheme('dark'));
+      btnDevice.addEventListener('click', () => applyTheme('device'));
+
+      // Escuchar si el usuario cambia el tema desde el sistema operativo (Si está en modo Dispositivo)
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+        if(localStorage.getItem('pastilla_theme') === 'device') {
+          applyTheme('device');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
