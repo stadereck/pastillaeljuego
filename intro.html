@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido a Operación Pastilla | Devon®</title>
+    
+    <!-- Favicon dinámico (se actualizará por JS) -->
+    <link id="favicon" rel="icon" type="image/png" href="">
+
+    <!-- 1. Configuración Base y Tipografía -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cormorant: ['"Cormorant Garamond"', 'serif'],
+                        inter: ['"Inter"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #a2c2d6;
+        }
+
+        /* 3. Animación Sunburst (Rayos de fondo blancos) */
+        .sunburst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200vw;
+            height: 200vw;
+            background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.25) 0deg 3deg, transparent 3deg 8deg);
+            mask-image: radial-gradient(circle at center, black 10%, transparent 40%);
+            -webkit-mask-image: radial-gradient(circle at center, black 10%, transparent 40%);
+            z-index: 10;
+            pointer-events: none;
+            animation: rotateRays 100s linear infinite;
+        }
+
+        @keyframes rotateRays {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* 6. El Planeta Marte */
+        .giant-planet {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at 40% 30%, #e74c3c 0%, transparent 60%), 
+                        radial-gradient(ellipse at 70% 80%, #c0392b 0%, transparent 60%), 
+                        linear-gradient(45deg, #8e44ad, #c0392b);
+            box-shadow: inset -25px -25px 40px rgba(0, 0, 0, 0.8), 
+                        inset 10px 10px 25px rgba(255, 255, 255, 0.4), 
+                        inset 0px 0px 10px rgba(255, 255, 255, 0.2), 
+                        0 20px 50px rgba(0,0,0,0.3);
+            animation: floatPlanet 6s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 20;
+            overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+            .giant-planet { width: 420px; height: 420px; }
+        }
+
+        @keyframes floatPlanet {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        /* 7. BOTÓN "GET STARTED" - ANIMACIÓN PROFESIONAL */
+        .btn-get-started {
+            background-color: #16161a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            height: 48px;
+            width: 170px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .btn-get-started:hover {
+            background-color: #000000;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            transform: scale(1.05);
+        }
+
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .btn-get-started:hover .btn-icon {
+            transform: translateX(122px);
+        }
+
+        .btn-text {
+            position: absolute;
+            left: 56px;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.95rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+            opacity: 1;
+        }
+
+        .btn-get-started:hover .btn-text {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+
+        .btn-icon svg {
+            transition: transform 0.4s ease;
+        }
+        .btn-get-started:hover .btn-icon svg {
+            transform: scale(1.1);
+        }
+
+        .btn-get-started:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="antialiased text-[#1a2b38]">
+
+    <!-- Fondo Fotográfico y Aura -->
+    <div class="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1499346030926-9a72daac6c63?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-80 pointer-events-none"></div>
+    <div class="fixed inset-0 z-[5] pointer-events-none" style="background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 60%)"></div>
+
+    <!-- Rayos Blancos de Fondo -->
+    <div class="sunburst"></div>
+
+    <div class="relative z-30 min-h-screen flex flex-col justify-between p-6 md:p-8">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center w-full">
+            <div class="flex items-center gap-2">
+                <!-- Logo dinámico -->
+                <img id="header-logo" src="" alt="Logo" class="w-7 h-7 object-contain">
+                <span class="font-sans font-semibold tracking-widest text-[#2c3e50] lowercase text-sm">pastilla</span>
+            </div>
+        </header>
+
+        <!-- Main -->
+        <main class="flex-1 flex flex-col items-center justify-center">
+            <h1 class="font-cormorant text-[3.2rem] md:text-[6rem] text-[#1a2b38] font-normal tracking-tight drop-shadow-sm mb-10 leading-none text-center">
+                Bienvenido a Operación Pastilla
+            </h1>
+
+            <div class="giant-planet">
+                <!-- Botón de Inicio -->
+                <button class="btn-get-started" onclick="window.location.href='selector.html'">
+                    <div class="btn-icon">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </div>
+                    <span class="btn-text">Get started</span>
+                </button>
+            </div>
+        </main>
+
+        <footer class="w-full text-center pb-2"></footer>
+    </div>
+
+    <!-- Script para Logo Aleatorio -->
+    <script>
+        const logos = [
+            "https://framerusercontent.com/images/uX8CQWBIMOZ93Hfua8tMIE3XPk.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/c1vetV29vyhQ7txOokbtTVzLkc.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/12fi293AgQ6WKkdnL56q9zXruaM.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/Flopgw7cAgiTwDJ8X40tO3u6c.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/g2iRJtGwdgJtbea9zINzAFxMY.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/yesr9xV0cohCNzq1NOl5n0UqT8.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/oZesYcadl5czhvenyFIbWNsnN0.png?scale-down-to=512&width=522&height=522",
+            "https://framerusercontent.com/images/ee04zdoMlDjOV1nw5EiDNvX9Tc.png?scale-down-to=512&width=522&height=522"
+        ];
+
+        function setRandomLogo() {
+            const randomIndex = Math.floor(Math.random() * logos.length);
+            const selectedLogo = logos[randomIndex];
+
+            // Actualizar Logo en Header
+            const headerLogo = document.getElementById('header-logo');
+            if (headerLogo) headerLogo.src = selectedLogo;
+
+            // Actualizar Favicon
+            const favicon = document.getElementById('favicon');
+            if (favicon) favicon.href = selectedLogo;
+        }
+
+        // Ejecutar al cargar la página
+        window.onload = setRandomLogo;
+    </script>
+
+</body>
+</html>
