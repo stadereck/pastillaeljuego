@@ -37,38 +37,21 @@
             background-color: #a2c2d6;
         }
 
-        /* 3. Animación Sunburst (Rayos de fondo blancos) */
-        .sunburst {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 200vw;
-            height: 200vw;
-            background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, 0.25) 0deg 3deg, transparent 3deg 8deg);
-            mask-image: radial-gradient(circle at center, black 10%, transparent 40%);
-            -webkit-mask-image: radial-gradient(circle at center, black 10%, transparent 40%);
-            z-index: 10;
-            pointer-events: none;
-            animation: rotateRays 100s linear infinite;
-        }
-
-        @keyframes rotateRays {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        /* 6. El Planeta Marte */
+        /* 6. El Planeta Dinámico (Texturizado con Imagen) */
         .giant-planet {
             width: 320px;
             height: 320px;
             border-radius: 50%;
-            background: radial-gradient(ellipse at 40% 30%, #e74c3c 0%, transparent 60%), 
-                        radial-gradient(ellipse at 70% 80%, #c0392b 0%, transparent 60%), 
-                        linear-gradient(45deg, #8e44ad, #c0392b);
+            /* La imagen se inyecta por JS */
+            background-size: cover;
+            background-position: center;
+            
+            /* Volumen 3D (Se mantiene sobre la imagen) */
             box-shadow: inset -25px -25px 40px rgba(0, 0, 0, 0.8), 
                         inset 10px 10px 25px rgba(255, 255, 255, 0.4), 
                         inset 0px 0px 10px rgba(255, 255, 255, 0.2), 
                         0 20px 50px rgba(0,0,0,0.3);
+            
             animation: floatPlanet 6s ease-in-out infinite;
             display: flex;
             align-items: center;
@@ -102,6 +85,7 @@
             transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
             overflow: hidden;
             z-index: 10;
+            backdrop-filter: blur(8px); /* Toque premium sobre la textura */
         }
 
         .btn-get-started:hover {
@@ -158,19 +142,14 @@
 </head>
 <body class="antialiased text-[#1a2b38]">
 
-    <!-- Fondo Fotográfico y Aura -->
+    <!-- Fondo Fotográfico -->
     <div class="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1499346030926-9a72daac6c63?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-80 pointer-events-none"></div>
-    <div class="fixed inset-0 z-[5] pointer-events-none" style="background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 60%)"></div>
-
-    <!-- Rayos Blancos de Fondo -->
-    <div class="sunburst"></div>
 
     <div class="relative z-30 min-h-screen flex flex-col justify-between p-6 md:p-8">
         
         <!-- Header -->
         <header class="flex justify-between items-center w-full">
             <div class="flex items-center gap-2">
-                <!-- Logo dinámico -->
                 <img id="header-logo" src="" alt="Logo" class="w-7 h-7 object-contain">
                 <span class="font-sans font-semibold tracking-widest text-[#2c3e50] lowercase text-sm">pastilla</span>
             </div>
@@ -182,7 +161,7 @@
                 Bienvenido a Operación Pastilla
             </h1>
 
-            <div class="giant-planet">
+            <div id="planet" class="giant-planet">
                 <!-- Botón de Inicio -->
                 <button class="btn-get-started" onclick="window.location.href='selector.html'">
                     <div class="btn-icon">
@@ -198,7 +177,7 @@
         <footer class="w-full text-center pb-2"></footer>
     </div>
 
-    <!-- Script para Logo Aleatorio -->
+    <!-- Script para Logo y Textura Aleatoria -->
     <script>
         const logos = [
             "https://framerusercontent.com/images/uX8CQWBIMOZ93Hfua8tMIE3XPk.png?scale-down-to=512&width=522&height=522",
@@ -215,16 +194,22 @@
             const randomIndex = Math.floor(Math.random() * logos.length);
             const selectedLogo = logos[randomIndex];
 
-            // Actualizar Logo en Header
+            // 1. Actualizar Logo en Header
             const headerLogo = document.getElementById('header-logo');
             if (headerLogo) headerLogo.src = selectedLogo;
 
-            // Actualizar Favicon
+            // 2. Actualizar Favicon
             const favicon = document.getElementById('favicon');
             if (favicon) favicon.href = selectedLogo;
+
+            // 3. Aplicar imagen como TEXTURA del Planeta
+            const planet = document.getElementById('planet');
+            if (planet) {
+                planet.style.backgroundImage = `url('${selectedLogo}')`;
+            }
         }
 
-        // Ejecutar al cargar la página
+        // Ejecutar al cargar
         window.onload = setRandomLogo;
     </script>
 
