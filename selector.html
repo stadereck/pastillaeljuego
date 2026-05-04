@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Operación Pastilla | Devon®</title>
+  <title>Operación Pastilla | Devon&reg;</title>
+  
+  <!-- Favicon Dinámico -->
+  <link id="dynamicFavicon" rel="icon" type="image/png" href="">
   
   <!-- Tailwind CSS por CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -196,6 +199,49 @@
       }
     }
 
+    /* --- ESTILOS Y ANIMACIONES DEL VOLUMEN --- */
+    .wave { opacity: 0; transition: opacity 0.3s ease; transform-origin: center; }
+    .mute-line { opacity: 0; transition: opacity 0.3s ease; }
+    
+    /* Estado: Silencio */
+    .vol-silencio .mute-line { opacity: 1; stroke: #ff4d4d; }
+    
+    /* Estado: Bajo */
+    .vol-bajo .wave-1 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out; }
+    
+    /* Estado: Medio */
+    .vol-medio .wave-1 { opacity: 1; }
+    .vol-medio .wave-2 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out 0.2s; }
+    
+    /* Estado: Alto */
+    .vol-alto .wave-1 { opacity: 1; }
+    .vol-alto .wave-2 { opacity: 1; }
+    .vol-alto .wave-3 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out 0.4s; }
+    
+    @keyframes volPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    /* --- Animación de Líneas de Fondo --- */
+    .bg-line {
+      stroke: rgba(255, 255, 255, 0.25); /* Color blanco en modo oscuro (por defecto) */
+      transition: stroke 1s ease; /* Transición suave de color al cambiar de tema */
+      animation: floatLine 10s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+    
+    /* Desfasar las animaciones para que se muevan de forma orgánica e independiente */
+    .bg-line:nth-child(1) { animation-duration: 12s; }
+    .bg-line:nth-child(2) { animation-duration: 15s; animation-delay: -4s; }
+    .bg-line:nth-child(3) { animation-duration: 18s; animation-delay: -8s; }
+    .bg-line:nth-child(4) { animation-duration: 13s; animation-delay: -6s; }
+
+    @keyframes floatLine {
+      0% { transform: translate(-3%, -5%) scale(1); }
+      100% { transform: translate(3%, 5%) scale(1.08); } /* Movimiento mucho más notorio */
+    }
+
     /* --- ESTILOS PARA EL MODO CLARO --- */
     body.light-theme {
       background-color: #e2e8f0;
@@ -231,6 +277,11 @@
       color: #0ea5e9;
       border-color: rgba(0, 0, 0, 0.1);
     }
+
+    /* Líneas en modo claro */
+    body.light-theme .bg-line {
+      stroke: rgba(15, 23, 42, 0.15); /* Oscuro sutil en modo claro */
+    }
   </style>
 </head>
 <body>
@@ -243,22 +294,12 @@
       style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"
     ></div>
 
-    <!-- Líneas decorativas de fondo (SVGs) -->
-    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <path d="M-10,20 Q40,10 60,-10" stroke="url(#gradR)" stroke-width="0.1" fill="none" />
-      <path d="M-10,80 Q30,100 70,60 T120,40" stroke="url(#gradR)" stroke-width="0.1" fill="none" />
-      <path d="M110,10 Q60,30 30,110" stroke="url(#gradG)" stroke-width="0.1" fill="none" />
-      <path d="M40,110 Q80,80 120,90" stroke="url(#gradG)" stroke-width="0.1" fill="none" />
-      <defs>
-        <linearGradient id="gradR" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#ff4d4d" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id="gradG" x1="100%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#4dff88" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
+    <!-- Líneas decorativas de fondo (SVGs con Animación) -->
+    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path class="bg-line" d="M-10,20 Q40,10 60,-10" stroke-width="0.1" fill="none" />
+      <path class="bg-line" d="M-10,80 Q30,100 70,60 T120,40" stroke-width="0.1" fill="none" />
+      <path class="bg-line" d="M110,10 Q60,30 30,110" stroke-width="0.1" fill="none" />
+      <path class="bg-line" d="M40,110 Q80,80 120,90" stroke-width="0.1" fill="none" />
     </svg>
 
     <!-- Resplandor central suave -->
@@ -266,17 +307,26 @@
 
     <!-- Barra Superior -->
     <div class="absolute top-0 w-full p-6 flex justify-between items-center z-20">
-      <div class="flex items-center gap-2 text-white/90">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="opacity-80">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5z"/>
-          <circle cx="12" cy="12" r="2" fill="currentColor"/>
-        </svg>
-        <span class="font-sans font-semibold tracking-wide text-lg">pastilla</span>
+      <div class="flex items-center gap-3 text-white/90">
+        <!-- Logo Dinámico (Planeta aleatorio) -->
+        <div id="dynamicLogo" class="mini-sphere border border-white/10 shadow-lg"></div>
+        <div class="flex items-baseline gap-2">
+          <span class="font-sans font-semibold tracking-wide text-lg">pastilla</span>
+          <span class="font-sans text-[0.65rem] md:text-xs text-white/40 tracking-wider font-light uppercase">Power by Devon&reg;</span>
+        </div>
       </div>
-      <button class="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- Botón de Volumen Interactivo -->
+      <button id="btnVolume" class="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors z-30">
+        <svg id="volIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vol-medio">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <!-- Onda 1 (Bajo) -->
+          <path class="wave wave-1" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          <!-- Onda 2 (Medio) -->
+          <path class="wave wave-2" d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          <!-- Onda 3 (Alto) -->
+          <path class="wave wave-3" d="M22.5 1.5a15 15 0 0 1 0 21"></path>
+          <!-- Línea de Silencio (X cruzada) -->
+          <line class="mute-line" x1="1" y1="1" x2="23" y2="23"></line>
         </svg>
       </button>
     </div>
@@ -292,14 +342,29 @@
         Elija un nombre de usuario y un avatar
       </p>
 
-      <!-- Input Redondeado (Estilo Pastilla) -->
-      <div class="relative flex items-center bg-[#1a2327]/60 border border-white/20 rounded-full px-2 py-2 mb-16 w-full max-w-[340px] shadow-[0_0_15px_rgba(255,255,255,0.05),inset_0_4px_10px_rgba(0,0,0,0.5)] focus-within:border-white/40 focus-within:shadow-[0_0_20px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)] transition-all">
-        <div class="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center mr-3 ml-1 border border-white/5">
-          <div id="currentAvatar" class="mini-sphere sphere-6"></div>
+      <!-- Contenedor del Input y Dado Aleatorio -->
+      <div class="flex items-center justify-center gap-4 mb-16 w-full">
+        <!-- Input Redondeado (Estilo Pastilla) -->
+        <div class="relative flex items-center bg-[#1a2327]/60 border border-white/20 rounded-full px-2 py-2 w-full max-w-[340px] shadow-[0_0_15px_rgba(255,255,255,0.05),inset_0_4px_10px_rgba(0,0,0,0.5)] focus-within:border-white/40 focus-within:shadow-[0_0_20px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)] transition-all duration-300">
+          <div class="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center mr-3 ml-1 border border-white/5">
+            <div id="currentAvatar" class="mini-sphere sphere-6"></div>
+          </div>
+          <input id="usernameInput" type="text" class="bg-transparent border-none outline-none text-white font-sans text-lg w-full placeholder-white/30" placeholder="Nombre de usuario" spellcheck="false" />
+          <!-- Cursor de texto falso simulando el typing de la imagen -->
+          <span id="fakeCursor" class="absolute right-[115px] text-white/80 animate-pulse font-sans font-light text-xl pointer-events-none">|</span>
         </div>
-        <input id="usernameInput" type="text" class="bg-transparent border-none outline-none text-white font-sans text-lg w-full placeholder-white/30" placeholder="Nombre de usuario" spellcheck="false" />
-        <!-- Cursor de texto falso simulando el typing de la imagen -->
-        <span id="fakeCursor" class="absolute right-[115px] text-white/80 animate-pulse font-sans font-light text-xl pointer-events-none">|</span>
+
+        <!-- Botón Dado Aleatorio -->
+        <button id="btnRandomName" class="w-12 h-12 flex-shrink-0 bg-black/40 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 hover:scale-105 transition-all duration-300 text-white/70 hover:text-white shadow-lg backdrop-blur-md" title="Generar nombre aleatorio">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+            <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+            <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+            <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+            <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
+          </svg>
+        </button>
       </div>
 
       <!-- Carrusel de Planetas (Efecto Dock de macOS) -->
@@ -371,6 +436,11 @@
     </div>
   </div>
 
+  <!-- Audio de Fondo (Soundtrack) -->
+  <audio id="bgMusic" loop>
+    <source src="https://res.cloudinary.com/dhx58lnzb/video/upload/v1777919153/Soundtrack_del_Selector_-_Pastilla_Compressed_yjrxqq.mp3" type="audio/mpeg">
+  </audio>
+
   <!-- Script de Lógica e Interactividad -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -383,6 +453,34 @@
       const btnDark = document.getElementById('btnDark');
       const btnDevice = document.getElementById('btnDevice');
       const themeButtons = { 'light': btnLight, 'dark': btnDark, 'device': btnDevice };
+
+      // -- LÓGICA DEL LOGO Y FAVICON DINÁMICO --
+      const dynamicLogo = document.getElementById('dynamicLogo');
+      const dynamicFavicon = document.getElementById('dynamicFavicon');
+      
+      const logoImages = [
+        "https://framerusercontent.com/images/uX8CQWBIMOZ93Hfua8tMIE3XPk.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/c1vetV29vyhQ7txOokbtTVzLkc.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/12fi293AgQ6WKkdnL56q9zXruaM.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/Flopgw7cAgiTwDJ8X40tO3u6c.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/g2iRJtGwdgJtbea9zINzAFxMY.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/yesr9xV0cohCNzq1NOl5n0UqT8.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/oZesYcadl5czhvenyFIbWNsnN0.png?scale-down-to=512&width=522&height=522",
+        "https://framerusercontent.com/images/ee04zdoMlDjOV1nw5EiDNvX9Tc.png?scale-down-to=512&width=522&height=522"
+      ];
+
+      // Seleccionar una imagen aleatoria de la lista
+      const randomLogoImage = logoImages[Math.floor(Math.random() * logoImages.length)];
+
+      // Aplicar al logo en la barra superior
+      dynamicLogo.style.backgroundImage = `url('${randomLogoImage}')`;
+      dynamicLogo.style.backgroundSize = 'cover';
+      dynamicLogo.style.backgroundPosition = 'center';
+
+      // Aplicar al favicon en la pestaña del navegador
+      if (dynamicFavicon) {
+        dynamicFavicon.href = randomLogoImage;
+      }
 
       // 1. Cargar datos guardados (o valores por defecto)
       let savedName = localStorage.getItem('pastilla_name') || '';
@@ -402,6 +500,33 @@
         updateCursor();
       });
       updateCursor(); // Inicializar estado del cursor
+
+      // -- LÓGICA DEL DADO ALEATORIO --
+      const btnRandomName = document.getElementById('btnRandomName');
+      const inputContainer = input.closest('.relative');
+      
+      const randomUsernames = [
+        "AstroViajero", "CosmicRider", "NovaDust", "NebulaWalker",
+        "LunaByte", "QuantumPilot", "GalacticNomad", "StarForge",
+        "VoidSurfer", "ZenithSeeker", "MeteorDash", "SolarFlare",
+        "OrbitJumper", "AuroraHunter", "CiberPlaneta", "StellarEcho"
+      ];
+
+      btnRandomName.addEventListener('click', () => {
+        // Animación del dado rotando
+        btnRandomName.style.transform = 'rotate(180deg) scale(1.05)';
+        setTimeout(() => btnRandomName.style.transform = '', 300);
+
+        // Asignar nombre aleatorio espacial
+        const randomName = randomUsernames[Math.floor(Math.random() * randomUsernames.length)];
+        input.value = randomName;
+        localStorage.setItem('pastilla_name', randomName);
+        updateCursor();
+
+        // Animación de pulso (zoom) en el input para confirmar visualmente
+        inputContainer.classList.add('scale-[1.02]');
+        setTimeout(() => inputContainer.classList.remove('scale-[1.02]'), 200);
+      });
 
       // -- LÓGICA DEL AVATAR --
       const setAvatar = (className) => {
@@ -460,6 +585,57 @@
           applyTheme('device');
         }
       });
+
+      // -- LÓGICA DEL REPRODUCTOR DE MÚSICA --
+      const bgMusic = document.getElementById('bgMusic');
+      const btnVolume = document.getElementById('btnVolume');
+      const volIcon = document.getElementById('volIcon');
+
+      // Niveles de volumen: 0 (Silencio), 1 (Bajo), 2 (Medio), 3 (Alto)
+      let currentVolLevel = parseInt(localStorage.getItem('pastilla_vol_level')) || 2; 
+      const volumeValues = [0, 0.3, 0.6, 1.0];
+      const volClasses = ['vol-silencio', 'vol-bajo', 'vol-medio', 'vol-alto'];
+
+      const applyVolume = (level) => {
+        bgMusic.volume = volumeValues[level];
+        volIcon.className = volClasses[level];
+        localStorage.setItem('pastilla_vol_level', level);
+      };
+
+      // Inicializar volumen
+      applyVolume(currentVolLevel);
+
+      // Cambiar volumen al hacer clic en el botón superior derecho
+      btnVolume.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evitar que el clic cuente como interacción general para el autoplay
+        currentVolLevel = (currentVolLevel + 1) % 4; // Ciclar: 0 -> 1 -> 2 -> 3 -> 0
+        applyVolume(currentVolLevel);
+        
+        // Si no estaba silenciado y está pausado, reprodúcelo
+        if (currentVolLevel > 0 && bgMusic.paused) {
+          bgMusic.play().catch(console.error);
+        }
+      });
+
+      // Manejar el Autoplay Inteligente
+      const startAudio = () => {
+        if (currentVolLevel > 0 && bgMusic.paused) {
+          bgMusic.play().catch(console.error);
+        }
+        // Quitar el listener una vez que ya interactuó
+        document.removeEventListener('click', startAudio);
+        document.removeEventListener('keydown', startAudio);
+      };
+
+      // Intentar reproducir automáticamente (el navegador puede bloquearlo)
+      if (currentVolLevel > 0) {
+        bgMusic.play().catch(() => {
+          // Si el navegador lo bloqueó por políticas de Autoplay, espera a la primera interacción
+          document.addEventListener('click', startAudio);
+          document.addEventListener('keydown', startAudio);
+        });
+      }
+
     });
   </script>
 </body>
