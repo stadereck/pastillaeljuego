@@ -1,53 +1,94 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Operación Pastilla | Devon&reg;</title>
+  
+  <!-- Preconexión para optimizar carga de fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   
   <!-- Favicon Dinámico -->
   <link id="dynamicFavicon" rel="icon" type="image/png" href="">
   
-  <!-- Tailwind CSS por CDN -->
+  <!-- Tailwind CSS por CDN con Configuración Integrada -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Cormorant Garamond', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: '#3cdcc1',
+            brandHover: '#34c7ae',
+            darkBg: '#071012',
+          },
+          animation: {
+            'spin-fast': 'spin 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }
+        }
+      }
+    }
+  </script>
   
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
-
+    /* --- CONFIGURACIÓN BASE --- */
     body {
       margin: 0;
-      background-color: #071012;
-      font-family: 'Cormorant Garamond', serif;
-      /* Elimina el resalte azul nativo de los navegadores móviles al tocar */
       -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
     }
 
     .text-glow {
       text-shadow: 0 0 20px rgba(255,255,255,0.1), 0 0 40px rgba(255,255,255,0.05);
     }
+    
+    html:not(.dark) .text-glow {
+      text-shadow: 0 0 20px rgba(0,0,0,0.05), 0 0 40px rgba(0,0,0,0.02);
+    }
 
-    /* --- Lógica del Dock de macOS --- */
+    /* --- LÓGICA DEL DOCK DE MAC OS --- */
+    .dock-wrapper {
+      perspective: 1000px;
+    }
+
     .dock-container {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      height: 180px; /* Espacio para que crezcan sin desplazar el resto del layout */
+      gap: 14px;
+      height: 180px;
+      padding: 0 20px;
+      /* Scroll suave en móviles */
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
+    .dock-container::-webkit-scrollbar { display: none; }
 
     .sphere {
+      flex-shrink: 0;
       width: 55px;
       height: 55px;
       border-radius: 50%;
       position: relative;
       overflow: hidden;
+      scroll-snap-align: center;
       box-shadow: 
         inset -12px -12px 20px rgba(0, 0, 0, 0.8),
         inset 8px 8px 15px rgba(255, 255, 255, 0.3),
         inset 0px 0px 5px rgba(255, 255, 255, 0.2),
-        0 10px 15px rgba(0,0,0,0.6);
-      /* Transición suave para todos los cambios de tamaño, simulando la fluidez del Mac */
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        0 10px 15px rgba(0,0,0,0.4);
+      /* Curva bezier al estilo Apple para máxima fluidez */
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.15);
       cursor: pointer;
       outline: none;
       display: flex;
@@ -55,183 +96,105 @@
       align-items: center;
       justify-content: center;
       color: white;
-      text-decoration: none;
+      border: 1px solid transparent;
+      will-change: width, height, transform, box-shadow;
     }
 
-    /* 1. Esfera Principal (La que tiene el cursor / dedo encima) */
+    /* Focus state for accessibility */
+    .sphere:focus-visible {
+      border-color: #3cdcc1;
+      box-shadow: 0 0 0 3px rgba(60, 220, 193, 0.4);
+    }
+
+    /* 1. Esfera Principal (Hover/Focus) */
     .sphere:hover,
-    .sphere:focus,
-    .sphere:active {
-      width: 150px;
-      height: 150px;
+    .sphere:focus {
+      width: 140px;
+      height: 140px;
+      transform: translateY(-10px);
       box-shadow: 
         inset -12px -12px 20px rgba(0, 0, 0, 0.8),
         inset 8px 8px 15px rgba(255, 255, 255, 0.4),
         inset 0px 0px 5px rgba(255, 255, 255, 0.3),
-        0 25px 35px rgba(0,0,0,0.8);
+        0 25px 35px rgba(0,0,0,0.6);
       z-index: 10;
     }
 
-    /* 2. Esfera DERECHA Inmediata (Hermano siguiente) */
+    /* 2. Esfera DERECHA Inmediata */
     .sphere:hover + .sphere,
     .sphere:focus + .sphere {
-      width: 95px;
-      height: 95px;
+      width: 90px;
+      height: 90px;
+      transform: translateY(-5px);
       z-index: 5;
     }
 
-    /* 3. Esfera IZQUIERDA Inmediata (Hermano anterior - Magia de CSS moderno con :has) */
+    /* 3. Esfera IZQUIERDA Inmediata (Con :has) */
     .dock-container:has(> .sphere:hover) .sphere:has(+ .sphere:hover),
-    .dock-container:has(> .sphere:focus) .sphere:has(+ .sphere:focus),
-    .dock-container:has(> .sphere:active) .sphere:has(+ .sphere:active) {
-      width: 95px;
-      height: 95px;
+    .dock-container:has(> .sphere:focus) .sphere:has(+ .sphere:focus) {
+      width: 90px;
+      height: 90px;
+      transform: translateY(-5px);
       z-index: 5;
     }
 
-    /* Contenido interno de la esfera (Número y Nombre) */
+    /* Contenido Interno (Aparece suavemente) */
     .sphere-content {
       opacity: 0;
-      transition: opacity 0.2s ease;
+      transform: translateY(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-align: center;
       pointer-events: none;
     }
 
     .sphere:hover .sphere-content,
-    .sphere:focus .sphere-content,
-    .sphere:active .sphere-content {
+    .sphere:focus .sphere-content {
       opacity: 1;
-      transition-delay: 0.1s; /* Retraso para que el texto aparezca solo cuando ya es grande */
+      transform: translateY(0);
+      transition-delay: 0.1s;
     }
 
     .sphere-number {
-      font-size: 0.8rem;
-      border: 1px solid rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.4);
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(4px);
       border-radius: 50%;
       width: 24px;
       height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 4px auto;
-      font-family: sans-serif;
+      margin: 0 auto 6px auto;
+      font-family: 'Inter', sans-serif;
     }
 
     .sphere-name {
       font-size: 1.1rem;
       font-weight: 500;
       letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* Mini esfera para el contenedor del input */
-    .mini-sphere {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      box-shadow: inset -4px -4px 6px rgba(0,0,0,0.8), inset 2px 2px 4px rgba(255,255,255,0.3);
-    }
+    /* --- TEXTURAS Y PLANETAS (Generación Procedural CSS) --- */
+    .sphere-1 { background: linear-gradient(135deg, #e67e22 0%, #d35400 50%, rgba(142,68,173,0.8) 100%), repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px); background-blend-mode: overlay; }
+    .sphere-2 { background: linear-gradient(110deg, transparent 40%, rgba(231,76,60,0.8) 42%, rgba(231,76,60,0.8) 58%, transparent 60%), linear-gradient(-70deg, transparent 30%, rgba(26,188,156,0.6) 32%, rgba(26,188,156,0.6) 48%, transparent 50%), radial-gradient(circle at 30% 30%, #2c3e50, #1a252f); }
+    .sphere-3 { background: linear-gradient(125deg, transparent 35%, rgba(211,84,0,0.9) 37%, rgba(211,84,0,0.9) 63%, transparent 65%), radial-gradient(circle at 40% 40%, #16a085, #0b4e41); }
+    .sphere-4 { background: linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%), linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%), radial-gradient(circle at 35% 35%, #7f8c8d, #2c3e50, #000); }
+    .sphere-5 { background: radial-gradient(circle at 20% 30%, rgba(26,188,156,0.5) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(241,196,15,0.2) 0%, transparent 40%), linear-gradient(135deg, #34495e, #111); }
+    .sphere-6 { background: radial-gradient(ellipse at 40% 30%, #e74c3c 0%, transparent 60%), radial-gradient(ellipse at 70% 80%, #c0392b 0%, transparent 60%), linear-gradient(45deg, #8e44ad, #c0392b); }
+    .sphere-7 { background: linear-gradient(95deg, transparent 45%, rgba(41,128,185,0.7) 48%, rgba(41,128,185,0.7) 52%, transparent 55%), radial-gradient(circle at 30% 30%, #8e8055, #4a4128); }
+    .sphere-8 { background: linear-gradient(160deg, #fdfbfb 0%, #ebedee 40%, rgba(231,76,60,0.8) 100%); }
+    .sphere-9 { background: radial-gradient(circle at 50% 50%, #2980b9, #8e44ad, #2c3e50); }
 
-    /* Ocultar barra de scroll en móviles */
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-    .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-
-    /* --- Texturas y Gradientes de cada Esfera --- */
-    .sphere-1 {
-      background: linear-gradient(135deg, rgba(230,126,34,1) 0%, rgba(211,84,0,1) 50%, rgba(142,68,173,0.8) 100%),
-                  repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
-      background-blend-mode: overlay;
-    }
-
-    .sphere-2 {
-      background: 
-        linear-gradient(110deg, transparent 40%, rgba(231,76,60,0.8) 42%, rgba(231,76,60,0.8) 58%, transparent 60%),
-        linear-gradient(-70deg, transparent 30%, rgba(26,188,156,0.6) 32%, rgba(26,188,156,0.6) 48%, transparent 50%),
-        radial-gradient(circle at 30% 30%, #2c3e50, #1a252f);
-    }
-
-    .sphere-3 {
-      background: 
-        linear-gradient(125deg, transparent 35%, rgba(211,84,0,0.9) 37%, rgba(211,84,0,0.9) 63%, transparent 65%),
-        radial-gradient(circle at 40% 40%, #16a085, #0b4e41);
-    }
-
-    .sphere-4 {
-      background: 
-        linear-gradient(45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%),
-        linear-gradient(-45deg, transparent 48%, rgba(255,255,255,0.1) 50%, transparent 52%),
-        radial-gradient(circle at 35% 35%, #7f8c8d, #2c3e50, #000);
-    }
-
-    .sphere-5 {
-      background: 
-        radial-gradient(circle at 20% 30%, rgba(26,188,156,0.5) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(241,196,15,0.2) 0%, transparent 40%),
-        linear-gradient(135deg, #34495e, #111);
-    }
-
-    .sphere-6 {
-      background: 
-        radial-gradient(ellipse at 40% 30%, #e74c3c 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 80%, #c0392b 0%, transparent 60%),
-        linear-gradient(45deg, #8e44ad, #c0392b);
-    }
-
-    .sphere-7 {
-      background: 
-        linear-gradient(95deg, transparent 45%, rgba(41,128,185,0.7) 48%, rgba(41,128,185,0.7) 52%, transparent 55%),
-        radial-gradient(circle at 30% 30%, #8e8055, #4a4128);
-    }
-
-    .sphere-8 {
-      background: 
-        linear-gradient(160deg, #fdfbfb 0%, #ebedee 40%, rgba(231,76,60,0.8) 100%);
-    }
-
-    @media (max-width: 768px) {
-      .sphere {
-        width: 50px;
-        height: 50px;
-      }
-    }
-
-    /* --- ESTILOS Y ANIMACIONES DEL VOLUMEN --- */
-    .wave { opacity: 0; transition: opacity 0.3s ease; transform-origin: center; }
-    .mute-line { opacity: 0; transition: opacity 0.3s ease; }
-    
-    /* Estado: Silencio */
-    .vol-silencio .mute-line { opacity: 1; stroke: #ff4d4d; }
-    
-    /* Estado: Bajo */
-    .vol-bajo .wave-1 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out; }
-    
-    /* Estado: Medio */
-    .vol-medio .wave-1 { opacity: 1; }
-    .vol-medio .wave-2 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out 0.2s; }
-    
-    /* Estado: Alto */
-    .vol-alto .wave-1 { opacity: 1; }
-    .vol-alto .wave-2 { opacity: 1; }
-    .vol-alto .wave-3 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out 0.4s; }
-    
-    @keyframes volPulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
-
-    /* --- Animación de Líneas de Fondo --- */
+    /* --- ANIMACIONES DE FONDO --- */
     .bg-line {
-      stroke: rgba(255, 255, 255, 0.25); /* Color blanco en modo oscuro (por defecto) */
-      transition: stroke 1s ease; /* Transición suave de color al cambiar de tema */
+      transition: stroke 1s ease;
       animation: floatLine 10s ease-in-out infinite alternate;
       transform-origin: center;
+      will-change: transform; /* Optimización GPU */
     }
     
-    /* Desfasar las animaciones para que se muevan de forma orgánica e independiente */
     .bg-line:nth-child(1) { animation-duration: 12s; }
     .bg-line:nth-child(2) { animation-duration: 15s; animation-delay: -4s; }
     .bg-line:nth-child(3) { animation-duration: 18s; animation-delay: -8s; }
@@ -239,402 +202,429 @@
 
     @keyframes floatLine {
       0% { transform: translate(-3%, -5%) scale(1); }
-      100% { transform: translate(3%, 5%) scale(1.08); } /* Movimiento mucho más notorio */
+      100% { transform: translate(3%, 5%) scale(1.08); }
     }
 
-    /* --- ESTILOS PARA EL MODO CLARO --- */
-    body.light-theme {
-      background-color: #e2e8f0;
-      color: #0f172a;
-    }
-    body.light-theme .bg-gradient-to-br {
-      background-image: linear-gradient(to bottom right, #f8fafc, #e2e8f0, #cbd5e1);
-    }
-    body.light-theme .text-white { color: #0f172a; }
-    body.light-theme .text-white\/60, body.light-theme .text-white\/50 { color: rgba(15, 23, 42, 0.6); }
-    body.light-theme .text-white\/90 { color: rgba(15, 23, 42, 0.9); }
-    body.light-theme .text-glow {
-      text-shadow: 0 0 20px rgba(0,0,0,0.1), 0 0 40px rgba(0,0,0,0.05);
-    }
-    /* Adaptando el glassmorphism al modo claro */
-    body.light-theme .bg-\[\#1a2327\]\/60 { background-color: rgba(255, 255, 255, 0.6); }
-    body.light-theme .border-white\/20, body.light-theme .border-white\/5 { border-color: rgba(0, 0, 0, 0.1); }
-    body.light-theme .bg-black\/40 { background-color: rgba(255, 255, 255, 0.5); }
-    body.light-theme .bg-black\/30 { background-color: rgba(255, 255, 255, 0.6); }
-    body.light-theme .hover\:bg-black\/50:hover { background-color: rgba(255, 255, 255, 0.9); }
-    body.light-theme .placeholder-white\/30::placeholder { color: rgba(15, 23, 42, 0.4); }
+    /* --- ANIMACIONES DE VOLUMEN --- */
+    .wave { opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; transform-origin: left; }
+    .mute-line { opacity: 0; transition: opacity 0.3s ease; stroke-dasharray: 30; stroke-dashoffset: 30; }
     
-    /* Botones de tema (Estado Activo) */
-    .theme-btn { transition: all 0.3s ease; }
-    .theme-btn.active {
-      background-color: #2a3c42;
-      color: #3cdcc1;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      border-color: rgba(255, 255, 255, 0.05);
-    }
-    body.light-theme .theme-btn.active {
-      background-color: #ffffff;
-      color: #0ea5e9;
-      border-color: rgba(0, 0, 0, 0.1);
+    .vol-silencio .mute-line { opacity: 1; stroke: #ef4444; stroke-dashoffset: 0; transition: stroke-dashoffset 0.4s ease-out; }
+    .vol-bajo .wave-1 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out; }
+    .vol-medio .wave-1 { opacity: 1; }
+    .vol-medio .wave-2 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out 0.2s; }
+    .vol-alto .wave-1, .vol-alto .wave-2 { opacity: 1; }
+    .vol-alto .wave-3 { opacity: 1; animation: volPulse 1.5s infinite ease-in-out 0.4s; }
+    
+    @keyframes volPulse {
+      0%, 100% { opacity: 0.4; transform: scaleY(0.9); }
+      50% { opacity: 1; transform: scaleY(1.1); }
     }
 
-    /* Líneas en modo claro */
-    body.light-theme .bg-line {
-      stroke: rgba(15, 23, 42, 0.15); /* Oscuro sutil en modo claro */
+    /* --- ESTILOS DE COMPONENTES INTERACTIVOS --- */
+    .glass-panel {
+      background: rgba(26, 35, 39, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     }
+    
+    html:not(.dark) .glass-panel {
+      background: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Ocultar cursor falso realísticamente */
+    .typing-cursor::after {
+      content: '|';
+      animation: blink 1s step-end infinite;
+      color: inherit;
+      opacity: 0.8;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .hide-cursor::after { display: none; }
   </style>
 </head>
-<body>
+<body class="bg-slate-100 dark:bg-darkBg text-slate-800 dark:text-white transition-colors duration-500 font-serif min-h-[100dvh] flex flex-col">
+
+  <!-- Fondo Base Dinámico -->
+  <div class="fixed inset-0 z-0 transition-colors duration-700 bg-gradient-to-br from-slate-50 via-slate-200 to-slate-300 dark:from-[#0b1618] dark:via-[#071316] dark:to-[#050a0b]"></div>
   
-  <div class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-[#0b1618] via-[#071316] to-[#050a0b] text-white">
-    
-    <!-- Textura de grano suave (Ruido de fondo) -->
-    <div 
-      class="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay"
-      style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"
-    ></div>
+  <!-- Textura de Ruido -->
+  <div class="fixed inset-0 z-0 opacity-[0.04] dark:opacity-[0.03] pointer-events-none mix-blend-overlay" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.85%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
 
-    <!-- Líneas decorativas de fondo (SVGs con Animación) -->
-    <svg class="absolute top-0 left-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-      <path class="bg-line" d="M-10,20 Q40,10 60,-10" stroke-width="0.1" fill="none" />
-      <path class="bg-line" d="M-10,80 Q30,100 70,60 T120,40" stroke-width="0.1" fill="none" />
-      <path class="bg-line" d="M110,10 Q60,30 30,110" stroke-width="0.1" fill="none" />
-      <path class="bg-line" d="M40,110 Q80,80 120,90" stroke-width="0.1" fill="none" />
-    </svg>
+  <!-- Líneas de Fondo -->
+  <svg class="fixed top-0 left-0 w-full h-full pointer-events-none z-0" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <path class="bg-line stroke-slate-900/10 dark:stroke-white/20" d="M-10,20 Q40,10 60,-10" stroke-width="0.1" fill="none" />
+    <path class="bg-line stroke-slate-900/10 dark:stroke-white/20" d="M-10,80 Q30,100 70,60 T120,40" stroke-width="0.1" fill="none" />
+    <path class="bg-line stroke-slate-900/10 dark:stroke-white/20" d="M110,10 Q60,30 30,110" stroke-width="0.1" fill="none" />
+    <path class="bg-line stroke-slate-900/10 dark:stroke-white/20" d="M40,110 Q80,80 120,90" stroke-width="0.1" fill="none" />
+  </svg>
 
-    <!-- Resplandor central suave -->
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+  <!-- Resplandor Central -->
+  <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] md:w-[800px] md:h-[800px] bg-brand/10 dark:bg-emerald-900/10 rounded-full blur-[80px] md:blur-[120px] pointer-events-none z-0 transition-all duration-700"></div>
 
-    <!-- Barra Superior -->
-    <div class="absolute top-0 w-full p-6 flex justify-between items-center z-20">
-      <div class="flex items-center gap-3 text-white/90">
-        <!-- Logo Dinámico (Planeta aleatorio) -->
-        <div id="dynamicLogo" class="mini-sphere border border-white/10 shadow-lg"></div>
-        <div class="flex items-baseline gap-2">
-          <span class="font-sans font-semibold tracking-wide text-lg">pastilla</span>
-          <span class="font-sans text-[0.65rem] md:text-xs text-white/40 tracking-wider font-light uppercase">Power by Devon&reg;</span>
-        </div>
+  <!-- HEADER (Barra Superior) -->
+  <header class="relative z-20 w-full p-6 flex justify-between items-center animate-fade-in-down">
+    <div class="flex items-center gap-3">
+      <!-- Logo -->
+      <div id="dynamicLogo" class="w-6 h-6 md:w-8 md:h-8 rounded-full border border-slate-300 dark:border-white/10 shadow-lg bg-cover bg-center transition-transform hover:scale-110 duration-300"></div>
+      <div class="flex items-baseline gap-2">
+        <span class="font-sans font-semibold tracking-wide text-lg text-slate-800 dark:text-white/90 transition-colors">pastilla</span>
+        <span class="font-sans text-[0.65rem] md:text-xs text-slate-500 dark:text-white/40 tracking-wider font-light uppercase">Power by Devon&reg;</span>
       </div>
-      <!-- Botón de Volumen Interactivo -->
-      <button id="btnVolume" class="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors z-30">
-        <svg id="volIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vol-medio">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <!-- Onda 1 (Bajo) -->
-          <path class="wave wave-1" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          <!-- Onda 2 (Medio) -->
-          <path class="wave wave-2" d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-          <!-- Onda 3 (Alto) -->
-          <path class="wave wave-3" d="M22.5 1.5a15 15 0 0 1 0 21"></path>
-          <!-- Línea de Silencio (X cruzada) -->
-          <line class="mute-line" x1="1" y1="1" x2="23" y2="23"></line>
+    </div>
+
+    <!-- Controles de Audio -->
+    <button id="btnVolume" aria-label="Control de Volumen" class="w-10 h-10 glass-panel rounded-xl flex items-center justify-center hover:bg-slate-200/50 dark:hover:bg-white/10 transition-all active:scale-95 group">
+      <svg id="volIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vol-medio text-slate-600 dark:text-white group-hover:text-brand transition-colors">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path class="wave wave-1" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        <path class="wave wave-2" d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+        <path class="wave wave-3" d="M22.5 1.5a15 15 0 0 1 0 21"></path>
+        <line class="mute-line" x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+    </button>
+  </header>
+
+  <!-- MAIN (Contenido Central) -->
+  <main class="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-5xl mx-auto px-4 mt-[-40px]">
+    
+    <!-- Títulos -->
+    <div class="text-center mb-10 md:mb-12">
+      <h1 class="text-[3.5rem] sm:text-[4rem] md:text-[5rem] leading-[1.1] font-normal text-glow mb-3 transition-colors">
+        Hágalo <span class="italic font-light text-brand">suyo</span>
+      </h1>
+      <p class="font-sans text-sm md:text-base tracking-wide text-slate-600 dark:text-white/60 transition-colors">
+        Elija un nombre de usuario y un avatar
+      </p>
+    </div>
+
+    <!-- Zona de Input -->
+    <div class="flex items-center justify-center gap-3 md:gap-4 mb-12 md:mb-16 w-full px-2">
+      <!-- Input Contenedor -->
+      <div id="inputWrapper" class="relative flex items-center glass-panel rounded-full px-2 py-2 w-full max-w-[340px] transition-all duration-300 focus-within:ring-2 focus-within:ring-brand/50">
+        <!-- Avatar actual en miniatura -->
+        <div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-black/40 flex items-center justify-center mr-3 ml-1 border border-slate-300 dark:border-white/5 shadow-inner">
+          <div id="currentAvatar" class="w-6 h-6 rounded-full shadow-[inset_-4px_-4px_6px_rgba(0,0,0,0.8),inset_2px_2px_4px_rgba(255,255,255,0.3)] sphere-6 transition-all duration-500"></div>
+        </div>
+        
+        <!-- Campo de texto real -->
+        <input 
+          id="usernameInput" 
+          type="text" 
+          class="bg-transparent border-none outline-none font-sans text-lg w-full text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-white/30 peer" 
+          placeholder="Nombre de usuario" 
+          spellcheck="false" 
+          autocomplete="off"
+        />
+        
+        <!-- Efecto decorativo de pulsación -->
+        <div class="absolute inset-0 rounded-full pointer-events-none border border-transparent peer-focus:border-brand/30 transition-colors duration-300"></div>
+      </div>
+
+      <!-- Botón Dado (Generador) -->
+      <button id="btnRandomName" aria-label="Generar nombre aleatorio" class="w-12 h-12 flex-shrink-0 glass-panel rounded-full flex items-center justify-center hover:bg-slate-200/80 dark:hover:bg-white/10 hover:scale-105 transition-all duration-300 text-slate-600 dark:text-white/70 hover:text-brand dark:hover:text-brand active:scale-95 group">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:animate-spin-fast">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"></circle>
+          <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
         </svg>
       </button>
     </div>
 
-    <!-- Contenido Principal -->
-    <div class="relative z-10 flex flex-col items-center w-full max-w-5xl px-4 mt-12">
-      
-      <!-- Textos -->
-      <h1 class="text-[4rem] md:text-[5rem] leading-[1] font-normal text-center text-glow mb-2">
-        Hágalo <span class="italic font-light">suyo</span>
-      </h1>
-      <p class="text-white/60 font-sans text-sm md:text-base tracking-wide mb-12">
-        Elija un nombre de usuario y un avatar
-      </p>
-
-      <!-- Contenedor del Input y Dado Aleatorio -->
-      <div class="flex items-center justify-center gap-4 mb-16 w-full">
-        <!-- Input Redondeado (Estilo Pastilla) -->
-        <div class="relative flex items-center bg-[#1a2327]/60 border border-white/20 rounded-full px-2 py-2 w-full max-w-[340px] shadow-[0_0_15px_rgba(255,255,255,0.05),inset_0_4px_10px_rgba(0,0,0,0.5)] focus-within:border-white/40 focus-within:shadow-[0_0_20px_rgba(255,255,255,0.1),inset_0_4px_10px_rgba(0,0,0,0.5)] transition-all duration-300">
-          <div class="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center mr-3 ml-1 border border-white/5">
-            <div id="currentAvatar" class="mini-sphere sphere-6"></div>
-          </div>
-          <input id="usernameInput" type="text" class="bg-transparent border-none outline-none text-white font-sans text-lg w-full placeholder-white/30" placeholder="Nombre de usuario" spellcheck="false" />
-          <!-- Cursor de texto falso simulando el typing de la imagen -->
-          <span id="fakeCursor" class="absolute right-[115px] text-white/80 animate-pulse font-sans font-light text-xl pointer-events-none">|</span>
-        </div>
-
-        <!-- Botón Dado Aleatorio -->
-        <button id="btnRandomName" class="w-12 h-12 flex-shrink-0 bg-black/40 border border-white/10 rounded-full flex items-center justify-center hover:bg-white/10 hover:scale-105 transition-all duration-300 text-white/70 hover:text-white shadow-lg backdrop-blur-md" title="Generar nombre aleatorio">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"></circle>
-            <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"></circle>
-            <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"></circle>
-            <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"></circle>
-            <circle cx="12" cy="12" r="1.5" fill="currentColor"></circle>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Carrusel de Planetas (Efecto Dock de macOS) -->
-      <div class="dock-container w-full px-4 overflow-x-auto pb-4 md:pb-0 md:overflow-visible scrollbar-hide">
-        <div class="sphere sphere-1" tabindex="0">
+    <!-- DOCK DE PLANETAS (Selección de Avatar) -->
+    <div class="dock-wrapper w-full">
+      <div class="dock-container" role="radiogroup" aria-label="Selecciona tu avatar planetario">
+        <!-- Se usa <button> para accesibilidad y navegación con teclado -->
+        <button class="sphere sphere-1" role="radio" aria-checked="false" aria-label="Mercurio">
           <div class="sphere-content"><div class="sphere-number">01</div><div class="sphere-name">Mercurio</div></div>
-        </div>
-        <div class="sphere sphere-2" tabindex="0">
+        </button>
+        <button class="sphere sphere-2" role="radio" aria-checked="false" aria-label="Venus">
           <div class="sphere-content"><div class="sphere-number">02</div><div class="sphere-name">Venus</div></div>
-        </div>
-        <div class="sphere sphere-3" tabindex="0">
+        </button>
+        <button class="sphere sphere-3" role="radio" aria-checked="false" aria-label="Tierra">
           <div class="sphere-content"><div class="sphere-number">03</div><div class="sphere-name">Tierra</div></div>
-        </div>
-        <div class="sphere sphere-4" tabindex="0">
+        </button>
+        <button class="sphere sphere-4" role="radio" aria-checked="false" aria-label="Luna">
           <div class="sphere-content"><div class="sphere-number">04</div><div class="sphere-name">Luna</div></div>
-        </div>
-        <div class="sphere sphere-5" tabindex="0">
+        </button>
+        <button class="sphere sphere-5" role="radio" aria-checked="false" aria-label="Júpiter">
           <div class="sphere-content"><div class="sphere-number">05</div><div class="sphere-name">Júpiter</div></div>
-        </div>
-        <div class="sphere sphere-6" tabindex="0">
+        </button>
+        <button class="sphere sphere-6" role="radio" aria-checked="false" aria-label="Marte">
           <div class="sphere-content"><div class="sphere-number">06</div><div class="sphere-name">Marte</div></div>
-        </div>
-        <div class="sphere sphere-7" tabindex="0">
+        </button>
+        <button class="sphere sphere-7" role="radio" aria-checked="false" aria-label="Saturno">
           <div class="sphere-content"><div class="sphere-number">07</div><div class="sphere-name">Saturno</div></div>
-        </div>
-        <div class="sphere sphere-8" tabindex="0">
+        </button>
+        <button class="sphere sphere-8" role="radio" aria-checked="false" aria-label="Urano">
           <div class="sphere-content"><div class="sphere-number">08</div><div class="sphere-name">Urano</div></div>
-        </div>
-        <div class="sphere sphere-2" tabindex="0">
+        </button>
+        <button class="sphere sphere-9" role="radio" aria-checked="false" aria-label="Neptuno">
           <div class="sphere-content"><div class="sphere-number">09</div><div class="sphere-name">Neptuno</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Barra Inferior de Controles -->
-    <div class="absolute bottom-6 w-full px-8 flex justify-between items-center z-20 font-sans text-sm">
-      
-      <!-- Botón Volver -->
-      <button onclick="window.location.href='intro.html'" class="bg-black/30 hover:bg-black/50 text-white/90 border border-white/5 px-6 py-2.5 rounded-xl transition-colors backdrop-blur-md">
-        Volver
-      </button>
-
-      <!-- Selector de Tema (Centro) -->
-      <div class="hidden md:flex items-center gap-3">
-        <div class="flex items-center bg-black/30 border border-white/5 rounded-xl p-1 backdrop-blur-md">
-          <button id="btnLight" class="theme-btn flex items-center gap-2 text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-transparent">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            Claro
-          </button>
-          <button id="btnDark" class="theme-btn flex items-center gap-2 text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-transparent">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            Oscuro
-          </button>
-          <button id="btnDevice" class="theme-btn active flex items-center gap-2 text-white/50 hover:text-white px-3 py-1.5 rounded-lg border border-transparent">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            Dispositivo
-          </button>
-        </div>
-        <button class="bg-black/30 hover:bg-black/50 text-white/60 hover:text-white border border-white/5 p-2.5 rounded-xl transition-colors backdrop-blur-md">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
         </button>
       </div>
-
-      <!-- Botón Continuar -->
-      <button onclick="window.location.href='inicio.html'" class="bg-[#3cdcc1] hover:bg-[#34c7ae] text-[#071316] font-medium px-8 py-2.5 rounded-xl transition-colors shadow-[0_0_20px_rgba(60,220,193,0.3)]">
-        Continuar
-      </button>
-      
     </div>
-  </div>
+  </main>
+
+  <!-- FOOTER (Barra Inferior) -->
+  <footer class="relative z-20 w-full px-6 py-6 flex flex-col md:flex-row justify-between items-center gap-6 font-sans text-sm mt-auto">
+    
+    <!-- Botón Volver -->
+    <button onclick="window.location.href='intro.html'" class="w-full md:w-auto glass-panel hover:bg-slate-300/50 dark:hover:bg-black/50 text-slate-700 dark:text-white/90 px-6 py-3 rounded-xl transition-all font-medium active:scale-95">
+      Volver
+    </button>
+
+    <!-- Selector de Tema Central -->
+    <div class="hidden md:flex items-center gap-2 glass-panel rounded-xl p-1.5 shadow-sm">
+      <button data-theme="light" aria-label="Tema Claro" class="theme-btn flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        Claro
+      </button>
+      <button data-theme="dark" aria-label="Tema Oscuro" class="theme-btn flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        Oscuro
+      </button>
+      <button data-theme="device" aria-label="Tema del Dispositivo" class="theme-btn flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+        Sistema
+      </button>
+    </div>
+
+    <!-- Botón Continuar -->
+    <button onclick="window.location.href='inicio.html'" class="w-full md:w-auto bg-brand hover:bg-brandHover text-darkBg font-semibold px-8 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(60,220,193,0.3)] hover:shadow-[0_0_25px_rgba(60,220,193,0.5)] active:scale-95">
+      Continuar
+    </button>
+  </footer>
 
   <!-- Audio de Fondo (Soundtrack) -->
-  <audio id="bgMusic" loop>
+  <audio id="bgMusic" loop preload="metadata">
     <source src="https://res.cloudinary.com/dhx58lnzb/video/upload/v1777919153/Soundtrack_del_Selector_-_Pastilla_Compressed_yjrxqq.mp3" type="audio/mpeg">
   </audio>
 
-  <!-- Script de Lógica e Interactividad -->
+  <!-- LÓGICA JAVASCRIPT REFACTORIZADA Y MODULAR -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const input = document.getElementById('usernameInput');
-      const fakeCursor = document.getElementById('fakeCursor');
-      const currentAvatar = document.getElementById('currentAvatar');
-      const dockSpheres = document.querySelectorAll('.dock-container .sphere');
       
-      const btnLight = document.getElementById('btnLight');
-      const btnDark = document.getElementById('btnDark');
-      const btnDevice = document.getElementById('btnDevice');
-      const themeButtons = { 'light': btnLight, 'dark': btnDark, 'device': btnDevice };
-
-      // -- LÓGICA DEL LOGO Y FAVICON DINÁMICO --
-      const dynamicLogo = document.getElementById('dynamicLogo');
-      const dynamicFavicon = document.getElementById('dynamicFavicon');
-      
-      const logoImages = [
-        "https://framerusercontent.com/images/uX8CQWBIMOZ93Hfua8tMIE3XPk.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/c1vetV29vyhQ7txOokbtTVzLkc.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/12fi293AgQ6WKkdnL56q9zXruaM.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/Flopgw7cAgiTwDJ8X40tO3u6c.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/g2iRJtGwdgJtbea9zINzAFxMY.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/yesr9xV0cohCNzq1NOl5n0UqT8.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/oZesYcadl5czhvenyFIbWNsnN0.png?scale-down-to=512&width=522&height=522",
-        "https://framerusercontent.com/images/ee04zdoMlDjOV1nw5EiDNvX9Tc.png?scale-down-to=512&width=522&height=522"
-      ];
-
-      // Seleccionar una imagen aleatoria de la lista
-      const randomLogoImage = logoImages[Math.floor(Math.random() * logoImages.length)];
-
-      // Aplicar al logo en la barra superior
-      dynamicLogo.style.backgroundImage = `url('${randomLogoImage}')`;
-      dynamicLogo.style.backgroundSize = 'cover';
-      dynamicLogo.style.backgroundPosition = 'center';
-
-      // Aplicar al favicon en la pestaña del navegador
-      if (dynamicFavicon) {
-        dynamicFavicon.href = randomLogoImage;
-      }
-
-      // 1. Cargar datos guardados (o valores por defecto)
-      let savedName = localStorage.getItem('pastilla_name') || '';
-      let savedAvatar = localStorage.getItem('pastilla_avatar') || 'sphere-6';
-      let savedTheme = localStorage.getItem('pastilla_theme') || 'device';
-
-      // -- LÓGICA DEL NOMBRE --
-      input.value = savedName;
-      
-      const updateCursor = () => {
-        // Oculta el cursor falso si hay texto escrito
-        fakeCursor.style.display = input.value.length > 0 ? 'none' : 'block';
-      };
-      
-      input.addEventListener('input', (e) => {
-        localStorage.setItem('pastilla_name', e.target.value);
-        updateCursor();
-      });
-      updateCursor(); // Inicializar estado del cursor
-
-      // -- LÓGICA DEL DADO ALEATORIO --
-      const btnRandomName = document.getElementById('btnRandomName');
-      const inputContainer = input.closest('.relative');
-      
-      const randomUsernames = [
-        "AstroViajero", "CosmicRider", "NovaDust", "NebulaWalker",
-        "LunaByte", "QuantumPilot", "GalacticNomad", "StarForge",
-        "VoidSurfer", "ZenithSeeker", "MeteorDash", "SolarFlare",
-        "OrbitJumper", "AuroraHunter", "CiberPlaneta", "StellarEcho"
-      ];
-
-      btnRandomName.addEventListener('click', () => {
-        // Animación del dado rotando
-        btnRandomName.style.transform = 'rotate(180deg) scale(1.05)';
-        setTimeout(() => btnRandomName.style.transform = '', 300);
-
-        // Asignar nombre aleatorio espacial
-        const randomName = randomUsernames[Math.floor(Math.random() * randomUsernames.length)];
-        input.value = randomName;
-        localStorage.setItem('pastilla_name', randomName);
-        updateCursor();
-
-        // Animación de pulso (zoom) en el input para confirmar visualmente
-        inputContainer.classList.add('scale-[1.02]');
-        setTimeout(() => inputContainer.classList.remove('scale-[1.02]'), 200);
-      });
-
-      // -- LÓGICA DEL AVATAR --
-      const setAvatar = (className) => {
-        currentAvatar.className = `mini-sphere ${className}`;
-        localStorage.setItem('pastilla_avatar', className);
-      };
-      setAvatar(savedAvatar);
-
-      dockSpheres.forEach(sphere => {
-        sphere.addEventListener('click', () => {
-          // Extrae la clase específica 'sphere-X' del planeta clickeado
-          const sphereClass = Array.from(sphere.classList).find(c => c.startsWith('sphere-') && !c.includes('content'));
-          if (sphereClass) setAvatar(sphereClass);
-        });
-      });
-
-      // -- LÓGICA DEL TEMA --
-      const applyTheme = (themeStr) => {
-        localStorage.setItem('pastilla_theme', themeStr);
+      // ==========================================
+      // 1. GESTOR DE LOGO Y FAVICON
+      // ==========================================
+      const initBrandAssets = () => {
+        const logoImages = [
+          "https://framerusercontent.com/images/uX8CQWBIMOZ93Hfua8tMIE3XPk.png?scale-down-to=512",
+          "https://framerusercontent.com/images/c1vetV29vyhQ7txOokbtTVzLkc.png?scale-down-to=512",
+          "https://framerusercontent.com/images/12fi293AgQ6WKkdnL56q9zXruaM.png?scale-down-to=512",
+          "https://framerusercontent.com/images/Flopgw7cAgiTwDJ8X40tO3u6c.png?scale-down-to=512",
+          "https://framerusercontent.com/images/g2iRJtGwdgJtbea9zINzAFxMY.png?scale-down-to=512"
+        ];
+        const randomLogo = logoImages[Math.floor(Math.random() * logoImages.length)];
         
-        // Quitar estado activo de todos los botones
-        Object.values(themeButtons).forEach(btn => btn.classList.remove('active'));
-        
-        // Poner estado activo al botón seleccionado
-        if(themeButtons[themeStr]) {
-          themeButtons[themeStr].classList.add('active');
-        }
+        document.getElementById('dynamicLogo').style.backgroundImage = `url('${randomLogo}')`;
+        const favicon = document.getElementById('dynamicFavicon');
+        if (favicon) favicon.href = randomLogo;
+      };
 
-        // Aplicar el tema al body
-        if (themeStr === 'light') {
-          document.body.classList.add('light-theme');
-        } else if (themeStr === 'dark') {
-          document.body.classList.remove('light-theme');
-        } else if (themeStr === 'device') {
-          // Detectar preferencia del sistema
-          const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-          if (prefersLight) {
-            document.body.classList.add('light-theme');
+      // ==========================================
+      // 2. GESTOR DE TEMA (MODO CLARO/OSCURO TIPO TAILWIND)
+      // ==========================================
+      const ThemeManager = (() => {
+        const htmlElement = document.documentElement;
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        let currentTheme = localStorage.getItem('pastilla_theme') || 'device';
+
+        const applyActiveStyle = (themeValue) => {
+          themeBtns.forEach(btn => {
+            if(btn.dataset.theme === themeValue) {
+              btn.classList.add('bg-white', 'dark:bg-[#1a2327]', 'text-brand', 'shadow-sm', 'dark:text-brand');
+              btn.classList.remove('text-slate-500', 'dark:text-white/40');
+            } else {
+              btn.classList.remove('bg-white', 'dark:bg-[#1a2327]', 'text-brand', 'shadow-sm', 'dark:text-brand');
+              btn.classList.add('text-slate-500', 'dark:text-white/40');
+            }
+          });
+        };
+
+        const applyTheme = (themeStr) => {
+          currentTheme = themeStr;
+          localStorage.setItem('pastilla_theme', themeStr);
+          applyActiveStyle(themeStr);
+
+          if (themeStr === 'dark') {
+            htmlElement.classList.add('dark');
+          } else if (themeStr === 'light') {
+            htmlElement.classList.remove('dark');
           } else {
-            document.body.classList.remove('light-theme');
+            // Modo Dispositivo (Sistema)
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            htmlElement.classList.toggle('dark', prefersDark);
           }
-        }
-      };
+        };
 
-      // Inicializar tema guardado
-      applyTheme(savedTheme);
-
-      // Event Listeners para los botones de tema
-      btnLight.addEventListener('click', () => applyTheme('light'));
-      btnDark.addEventListener('click', () => applyTheme('dark'));
-      btnDevice.addEventListener('click', () => applyTheme('device'));
-
-      // Escuchar si el usuario cambia el tema desde el sistema operativo (Si está en modo Dispositivo)
-      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
-        if(localStorage.getItem('pastilla_theme') === 'device') {
-          applyTheme('device');
-        }
-      });
-
-      // -- LÓGICA DEL REPRODUCTOR DE MÚSICA --
-      const bgMusic = document.getElementById('bgMusic');
-      const btnVolume = document.getElementById('btnVolume');
-      const volIcon = document.getElementById('volIcon');
-
-      // Niveles de volumen: 0 (Silencio), 1 (Bajo), 2 (Medio), 3 (Alto)
-      let currentVolLevel = parseInt(localStorage.getItem('pastilla_vol_level')) || 2; 
-      const volumeValues = [0, 0.3, 0.6, 1.0];
-      const volClasses = ['vol-silencio', 'vol-bajo', 'vol-medio', 'vol-alto'];
-
-      const applyVolume = (level) => {
-        bgMusic.volume = volumeValues[level];
-        volIcon.className = volClasses[level];
-        localStorage.setItem('pastilla_vol_level', level);
-      };
-
-      // Inicializar volumen
-      applyVolume(currentVolLevel);
-
-      // Cambiar volumen al hacer clic en el botón superior derecho
-      btnVolume.addEventListener('click', (e) => {
-        e.stopPropagation(); // Evitar que el clic cuente como interacción general para el autoplay
-        currentVolLevel = (currentVolLevel + 1) % 4; // Ciclar: 0 -> 1 -> 2 -> 3 -> 0
-        applyVolume(currentVolLevel);
-        
-        // Si no estaba silenciado y está pausado, reprodúcelo
-        if (currentVolLevel > 0 && bgMusic.paused) {
-          bgMusic.play().catch(console.error);
-        }
-      });
-
-      // Manejar el Autoplay Inteligente
-      const startAudio = () => {
-        if (currentVolLevel > 0 && bgMusic.paused) {
-          bgMusic.play().catch(console.error);
-        }
-        // Quitar el listener una vez que ya interactuó
-        document.removeEventListener('click', startAudio);
-        document.removeEventListener('keydown', startAudio);
-      };
-
-      // Intentar reproducir automáticamente (el navegador puede bloquearlo)
-      if (currentVolLevel > 0) {
-        bgMusic.play().catch(() => {
-          // Si el navegador lo bloqueó por políticas de Autoplay, espera a la primera interacción
-          document.addEventListener('click', startAudio);
-          document.addEventListener('keydown', startAudio);
+        // Listeners
+        themeBtns.forEach(btn => {
+          btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
         });
-      }
+
+        // Escuchar cambios a nivel SO
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+          if (currentTheme === 'device') htmlElement.classList.toggle('dark', e.matches);
+        });
+
+        return { init: () => applyTheme(currentTheme) };
+      })();
+
+      // ==========================================
+      // 3. GESTOR DE INPUT Y DADO (EFECTO TYPEWRITER)
+      // ==========================================
+      const InputManager = (() => {
+        const input = document.getElementById('usernameInput');
+        const btnRandom = document.getElementById('btnRandomName');
+        const inputWrapper = document.getElementById('inputWrapper');
+        
+        const randomNames = ["AstroViajero", "CosmicRider", "NovaDust", "LunaByte", "QuantumPilot", "GalacticNomad", "VoidSurfer", "ZenithSeeker", "CiberPlaneta", "StellarEcho"];
+        
+        let typingTimeout;
+
+        const init = () => {
+          input.value = localStorage.getItem('pastilla_name') || '';
+          
+          input.addEventListener('input', (e) => {
+            localStorage.setItem('pastilla_name', e.target.value);
+          });
+
+          btnRandom.addEventListener('click', generateRandomName);
+        };
+
+        // Efecto realista de escritura
+        const typeText = (text, index = 0) => {
+          if (index === 0) {
+            input.value = '';
+            input.classList.add('typing-cursor');
+          }
+          
+          if (index < text.length) {
+            input.value += text.charAt(index);
+            localStorage.setItem('pastilla_name', input.value);
+            // Velocidad aleatoria para simular humanidad (30ms a 100ms)
+            const delay = Math.random() * 70 + 30; 
+            typingTimeout = setTimeout(() => typeText(text, index + 1), delay);
+          } else {
+            input.classList.remove('typing-cursor');
+            // Feedback visual al terminar
+            inputWrapper.classList.add('scale-[1.02]');
+            setTimeout(() => inputWrapper.classList.remove('scale-[1.02]'), 150);
+          }
+        };
+
+        const generateRandomName = () => {
+          clearTimeout(typingTimeout);
+          input.classList.remove('typing-cursor');
+          
+          const newName = randomNames[Math.floor(Math.random() * randomNames.length)];
+          typeText(newName);
+        };
+
+        return { init };
+      })();
+
+      // ==========================================
+      // 4. GESTOR DE AVATAR (DOCK)
+      // ==========================================
+      const AvatarManager = (() => {
+        const currentAvatarUI = document.getElementById('currentAvatar');
+        const dockContainer = document.querySelector('.dock-container');
+        const spheres = document.querySelectorAll('.sphere');
+
+        const setAvatar = (sphereClass) => {
+          // Extraemos solo la clase 'sphere-X' base
+          const cleanClass = sphereClass.match(/sphere-\d+/)[0];
+          
+          // Actualizamos visuales
+          currentAvatarUI.className = `w-6 h-6 rounded-full shadow-[inset_-4px_-4px_6px_rgba(0,0,0,0.8),inset_2px_2px_4px_rgba(255,255,255,0.3)] transition-all duration-500 ${cleanClass}`;
+          localStorage.setItem('pastilla_avatar', cleanClass);
+          
+          // Accesibilidad: marcar radio button
+          spheres.forEach(s => {
+            const isSelected = s.classList.contains(cleanClass);
+            s.setAttribute('aria-checked', isSelected);
+          });
+        };
+
+        const init = () => {
+          const savedAvatar = localStorage.getItem('pastilla_avatar') || 'sphere-6';
+          setAvatar(savedAvatar);
+
+          // Event Delegation para mejor rendimiento
+          dockContainer.addEventListener('click', (e) => {
+            const sphereBtn = e.target.closest('.sphere');
+            if (!sphereBtn) return;
+            
+            const classArray = Array.from(sphereBtn.classList);
+            const targetClass = classArray.find(c => c.startsWith('sphere-'));
+            if (targetClass) setAvatar(targetClass);
+          });
+        };
+
+        return { init };
+      })();
+
+      // ==========================================
+      // 5. GESTOR DE AUDIO INTELIGENTE
+      // ==========================================
+      const AudioManager = (() => {
+        const bgMusic = document.getElementById('bgMusic');
+        const btnVolume = document.getElementById('btnVolume');
+        const volIcon = document.getElementById('volIcon');
+        
+        let volLevel = parseInt(localStorage.getItem('pastilla_vol_level')) || 2; 
+        const volLevels = [0, 0.3, 0.6, 1.0];
+        const volClasses = ['vol-silencio', 'vol-bajo', 'vol-medio', 'vol-alto'];
+
+        const setVolume = (level) => {
+          bgMusic.volume = volLevels[level];
+          volIcon.className = `text-slate-600 dark:text-white group-hover:text-brand transition-colors ${volClasses[level]}`;
+          localStorage.setItem('pastilla_vol_level', level);
+        };
+
+        const init = () => {
+          setVolume(volLevel);
+
+          btnVolume.addEventListener('click', (e) => {
+            e.stopPropagation();
+            volLevel = (volLevel + 1) % 4;
+            setVolume(volLevel);
+            if (volLevel > 0 && bgMusic.paused) bgMusic.play().catch(() => {});
+          });
+
+          // Play inteligente (requiere interacción del usuario según navegadores modernos)
+          const startAudio = () => {
+            if (volLevel > 0 && bgMusic.paused) bgMusic.play().catch(() => {});
+            document.removeEventListener('click', startAudio);
+            document.removeEventListener('keydown', startAudio);
+          };
+
+          if (volLevel > 0) {
+            bgMusic.play().catch(() => {
+              document.addEventListener('click', startAudio, { once: true });
+              document.addEventListener('keydown', startAudio, { once: true });
+            });
+          }
+        };
+
+        return { init };
+      })();
+
+      // INICIALIZACIÓN GENERAL
+      initBrandAssets();
+      ThemeManager.init();
+      InputManager.init();
+      AvatarManager.init();
+      AudioManager.init();
 
     });
   </script>
